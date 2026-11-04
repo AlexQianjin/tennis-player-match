@@ -1,0 +1,25 @@
+{
+  "name": "@tennis/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "gen": "openapi-typescript openapi.json -o src/generated/api.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint src --ignore-pattern src/generated/**",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/errorCodes.test.ts"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "openapi-typescript": "^7.10.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.2"
+  }
+}

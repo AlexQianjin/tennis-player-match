@@ -1,0 +1,38 @@
+{
+  "name": "@tennis/miniapp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm dev:weapp",
+    "dev:weapp": "vite --mode development",
+    "dev:weapp:cloud": "vite --mode test",
+    "build:weapp:test": "vite build --mode test",
+    "build:weapp": "vite build --mode production",
+    "build": "pnpm build:weapp:test",
+    "lint": "eslint src vite.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/services/envelope.test.ts"
+  },
+  "dependencies": {
+    "@tennis/shared": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "eslint": "^9.39.1",
+    "rolldown": "1.2.15",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.2",
+    "vite": "8.3.5",
+    "vite-plugin-taro": "0.8.5"
+  },
+  "overrides": {
+    "@types/react": "$@types/react",
+    "rolldown": "$rolldown"
+  }
+}

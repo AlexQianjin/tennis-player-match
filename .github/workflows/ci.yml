@@ -1,0 +1,94 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @tennis/miniapp --filter @tennis/shared lint
+      - run: pnpm --filter @tennis/miniapp --filter @tennis/shared typecheck
+      - run: pnpm --filter @tennis/miniapp --filter @tennis/shared test
+      - run: pnpm --filter @tennis/miniapp build:weapp:test
+      - name: main package size (< 2MB, warn > 1.5MB)
+        run: |
+          size=$(du -sb --exclude=sub --exclude='*.map' apps/miniapp/dist/wx | cut -f1)
+          echo "main package: $size bytes"
+          [ "$size" -lt 2097152 ] || { echo "::error::主包超过 2MB"; exit 1; }
+          [ "$size" -lt 1572864 ] || echo "::warning::主包超过 1.5MB"
+
+  api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: tennis_test
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      UV_LOCKED: "1"
+      APP_ENV: test
+      TEST_DATABASE_URL: mysql+asyncmy://root:root@127.0.0.1:3306/tennis_test
+      MYSQL_ADDRESS: 127.0.0.1:3306
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: tennis_test
+      AUTH_MODE: wxcloud
+      WECHAT_APPID: wx-test
+      CBR_ENV_ID: test-env
+      SCHEDULER_ENABLED: "false"
+      LLM_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.13.7"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check . && uv run ruff format --check .
+      - run: uv run alembic upgrade head && uv run alembic check
+      - run: uv run alembic downgrade base && uv run alembic upgrade head
+      - run: uv run pytest --cov=tennis_match_api --cov-report=term-missing
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t tennis-api:ci apps/api --build-arg UV_DEFAULT_INDEX=https://pypi.org/simple --build-arg PIP_INDEX_URL=https://pypi.org/simple
+      - run: docker run --rm tennis-api:ci python -c "import tennis_match_api, asyncmy, zoneinfo; zoneinfo.ZoneInfo('Asia/Shanghai')"
+
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.13.7"
+          enable-cache: true
+      - run: pnpm install --frozen-lockfile
+      - run: cd apps/api && uv sync --locked
+        env:
+          UV_LOCKED: "1"
+      - run: pnpm gen:api
+      - run: git diff --exit-code packages/shared

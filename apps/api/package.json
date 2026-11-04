@@ -1,0 +1,20 @@
+{
+  "name": "@tennis/api",
+  "private": true,
+  "scripts": {
+    "setup": "uv sync --locked",
+    "dev": "uv run uvicorn tennis_match_api.main:create_app --factory --reload --host 0.0.0.0 --port 8000",
+    "start": "uv run tennis-match-api",
+    "migrate": "uv run tennis-match-migrate",
+    "migration:new": "uv run alembic revision --autogenerate -m",
+    "db:reset": "uv run alembic downgrade base && uv run alembic upgrade head && uv run tennis-match-seed --dev-fixtures",
+    "lint": "uv run ruff check . && uv run ruff format --check .",
+    "format": "uv run ruff format . && uv run ruff check --fix .",
+    "typecheck": "echo 'python: covered by ruff; mypy is deferred'",
+    "test": "uv run pytest",
+    "openapi": "uv run python -m tennis_match_api.scripts.export_openapi ../../packages/shared/openapi.json",
+    "seed": "uv run tennis-match-seed --courts seed/courts_wuhan.csv",
+    "docker:build": "docker build -t tennis-api:local .",
+    "build": "echo 'api: no build step'"
+  }
+}

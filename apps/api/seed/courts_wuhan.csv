@@ -1,0 +1,4 @@
+name,city,district,address,latitude,longitude,sort_order,is_active
+TODO-球场名称-01,武汉,TODO-所在区,TODO-详细地址,,,10,true
+TODO-球场名称-02,武汉,TODO-所在区,TODO-详细地址,,,20,true
+TODO-球场名称-03,武汉,TODO-所在区,TODO-详细地址,,,30,true
