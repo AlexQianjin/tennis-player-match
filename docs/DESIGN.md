@@ -2494,7 +2494,7 @@ jobs:
       LLM_ENABLED: "false"                   # 测试中通过依赖注入使用 FakeLLM
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3
         with: { enable-cache: true }
       - run: uv sync --locked
       - run: uv run ruff check . && uv run ruff format --check .
@@ -2516,7 +2516,7 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with: { node-version-file: .nvmrc, cache: pnpm }
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3
         with: { enable-cache: true }
       - run: pnpm install --frozen-lockfile
       - run: cd apps/api && uv sync --locked
