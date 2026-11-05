@@ -216,7 +216,7 @@ tennis-player-match/
 │       │   └── versions/
 │       │       └── 0001_init.py     # 逐条执行 sql/0001_init.sql；downgrade 逆序 DROP
 │       ├── seed/
-│       │   ├── courts_wuhan.csv     # TODO：真实球场数据待人工采集
+│       │   ├── courts_wuhan.csv     # 首批公开场馆；坐标大多留空，待微信地图 GCJ-02 抽查
 │       │   └── dev_fixtures.py      # 仅 dev/test：假用户、假约球
 │       ├── sql/
 │       │   └── users.sql            # = ddl_mysql_users.sql（最小权限账号，root 手工执行一次）
@@ -499,7 +499,7 @@ cp apps/api/.env.example apps/api/.env
 # 3. 本地数据库（docker compose MySQL 8.0）
 pnpm db:up
 pnpm db:migrate                      # alembic upgrade head
-pnpm seed:courts -- --allow-placeholder
+pnpm seed:courts
 pnpm db:reset                        # 需要时：重建 + dev 假数据（dev_user_1..10）
 
 # 4. 启动
@@ -2226,20 +2226,12 @@ export async function request<T>(o: ReqOpts, attempt = 0): Promise<T> {
 
 ## 11. 种子数据计划（武汉球场）
 
-原始文档未提供任何具体球场数据，**本设计不编造球场名称与地址**。
+`apps/api/seed/courts_wuhan.csv` 现在是首批公开场馆（全民健身中心、汉江湾体育公园、五环体育中心、毛坦公园、汉口文体中心、光谷国际网球中心、好燃时刻智慧体育公园），不再含占位行。产品仍应在微信地图上逐条抽查名称与地址。坐标只在有 GCJ-02 来源时填写：目前只有汉江湾体育公园网球场（高德）写了经纬度，其余留空，不要把 WGS84/OSM 坐标换算后填入。
 
 1. 数据文件：`apps/api/seed/courts_wuhan.csv`，列：`name,city,district,address,latitude,longitude,sort_order,is_active`（随镜像打包，便于在云上执行）。
-2. 初始内容为占位行；导入脚本在 prod 环境拒绝含 `TODO` 的行：
-
-```csv
-name,city,district,address,latitude,longitude,sort_order,is_active
-TODO-球场名称-01,武汉,TODO-所在区,TODO-详细地址,,,10,true
-TODO-球场名称-02,武汉,TODO-所在区,TODO-详细地址,,,20,true
-TODO-球场名称-03,武汉,TODO-所在区,TODO-详细地址,,,30,true
-```
-
-3. 采集任务（M1，产品/运营负责）：确认 10–20 个武汉常用、对外开放的球场的名称、所在区、详细地址、坐标（GCJ-02，与微信地图一致）；逐条人工核实（官方渠道 / 实地 / 地图）。
-4. 导入：`pnpm seed:courts`（= 在 `apps/api` 中 `uv run tennis-match-seed --courts seed/courts_wuhan.csv`），按 `(city, name)` 查找后插入或更新（唯一键 `uq_court_city_active_name`），幂等；`--allow-placeholder` 仅 dev/test 可用。使用 migrator 账号执行（`tennis_app` 对 `court` 只读）。云上首次导入：控制台「数据库管理」以 root 执行脚本生成的 SQL（`--emit-sql` 输出），或临时设置 `SEED_COURTS_ON_START=true` 发布一次后改回【假设：二选一，M1 定】。
+2. 当前文件可直接导入。若以后某行的名称、所在区或地址再次出现 `TODO`，导入脚本在 prod 环境拒绝该文件；dev/test 必须显式加上 `--allow-placeholder`。
+3. 后续采集（产品/运营）：在微信地图上核对这 7 个场馆，补上经过核对的 GCJ-02 坐标。不要在未核对时增补场馆。
+4. 导入：`pnpm seed:courts`（= 在 `apps/api` 中 `uv run tennis-match-seed --courts seed/courts_wuhan.csv`），按 `(city, name)` 查找后插入或更新（唯一键 `uq_court_city_active_name`），幂等。当前 CSV 不需要 `--allow-placeholder`。使用 migrator 账号执行（`tennis_app` 对 `court` 只读）。云上首次导入：控制台「数据库管理」以 root 执行脚本生成的 SQL（`--emit-sql` 输出），或临时设置 `SEED_COURTS_ON_START=true` 发布一次后改回【假设：二选一，M1 定】。
 5. 开发假数据：`apps/api/seed/dev_fixtures.py`（`tennis-match-seed --dev-fixtures`，`pnpm db:reset` 会调用）生成 `dev_user_1..10`（openid 前缀 `dev_`，昵称「测试用户N」，NTRP 2.5–4.5，多样的 style/bio，用于验证 LLM 打分）以及若干未来日期的单打/双打约球；脚本检查 `APP_ENV`，**禁止在 prod 执行**。
 
 ---
@@ -2613,7 +2605,7 @@ jobs:
 54. 云托管 MySQL 默认字符集显示为 utf8；需在控制台参数设置改为 utf8mb4 并显式建库（DDL 每张表也显式声明字符集，双保险）。8.0 的大小写敏感设置开通后不可改，本设计全部小写命名，不受影响。
 55. 账号上限 3 个（root + migrator + app）；若需要只读分析账号，只能复用或改用 TDSQL-C。
 56. 迁移随容器启动执行（`GET_LOCK` 串行化）；破坏性迁移需人工窗口与备份。生产环境创建后，可设 `RUN_MIGRATIONS_ON_START=false`，迁移先在测试环境验证，再以单独版本在生产执行。
-57. 球场种子在云上的首次导入方式（root 在数据库管理执行生成的 SQL，或启动时一次性导入）待 M1 确定；生产环境创建后需要重新导入已核实的真实数据（不含 `TODO` 行）。
+57. 球场种子在云上的首次导入方式（root 在数据库管理执行生成的 SQL，或启动时一次性导入）待 M1 确定。仓库里的 `courts_wuhan.csv` 已是首批公开场馆且不含 `TODO` 行；生产导入前仍应在微信地图抽查，坐标大多仍为空。
 58. ID 为自增整数，可被枚举；所有接口均校验调用者与资源关系，公开资料接口只返回非敏感字段。如需不可枚举 ID，P1 可增加对外 `public_id`（如 ULID）。
 59. 冷启动时 callContainer 返回的具体 errCode / errMsg 需 M0 实测后补充到前端错误码表。
 60. fileID 的具体格式（`cloud://<环境ID>.<存储桶>/<路径>`）以实际上传结果为准，M1 实测后固定校验规则。fileID 包含环境 ID，生产环境的头像需要用户在生产环境重新上传。
@@ -2654,7 +2646,7 @@ jobs:
 
 **数据与小程序**
 
-- [ ] 导入已核实的武汉球场数据（`courts_wuhan.csv` 中没有 `TODO` 行）。
+- [ ] 导入 `courts_wuhan.csv`（首批公开场馆，文件中已经没有 `TODO` 行；坐标大多留空，上线前在微信地图抽查）。
 - [ ] 小程序：
   - 在 `apps/miniapp/.env.production` 中填入 `TARO_APP_CLOUD_ENV=<生产环境ID>`；
   - 用 `pnpm --filter @tennis/miniapp build:weapp` 构建；

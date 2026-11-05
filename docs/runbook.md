@@ -39,7 +39,7 @@ Stdout JSON. Look for `event=startup`, `db_connect_retry`, and 5xx responses. `S
 ```sh
 pnpm db:up
 pnpm db:migrate
-pnpm --filter @tennis/api seed -- --allow-placeholder
+pnpm --filter @tennis/api seed
 ```
 
 `docker-compose.yml` is for laptops only. Cloud Hosting does not use it.

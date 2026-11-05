@@ -102,12 +102,42 @@ def test_identity_cache_round_trip() -> None:
     assert cache.get("b") is None
 
 
-def test_wuhan_court_csv_is_still_placeholder() -> None:
+def test_wuhan_court_csv_is_public_venues_without_placeholder_flag() -> None:
     with _CSV.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
-    assert rows
-    assert all("TODO" in row["name"] for row in rows)
-    assert all("TODO" in row["address"] for row in rows)
+    assert [row["name"] for row in rows] == [
+        "武汉全民健身中心网球场",
+        "汉江湾体育公园网球场",
+        "武汉五环体育中心网球场",
+        "毛坦公园网球场",
+        "汉口文体中心网球场",
+        "光谷国际网球中心",
+        "好燃时刻智慧体育公园网球场",
+    ]
+    assert all(row["city"] == "武汉" for row in rows)
+    assert [int(row["sort_order"]) for row in rows] == [10, 20, 30, 40, 50, 60, 70]
+    assert all(row["is_active"] == "true" for row in rows)
+    assert "TODO" not in _CSV.read_text(encoding="utf-8")
+    coords = [(row["latitude"], row["longitude"]) for row in rows]
+    assert coords[1] == ("30.585875", "114.201625")
+    assert all(lat == "" and lng == "" for lat, lng in coords[:1] + coords[2:])
+    validate_court_rows(rows, app_env="dev", allow_placeholder=False)
+    validate_court_rows(rows, app_env="prod", allow_placeholder=False)
+
+
+def test_placeholder_court_rows_still_need_the_flag() -> None:
+    rows = [
+        {
+            "name": "TODO-球场名称-01",
+            "city": "武汉",
+            "district": "TODO-所在区",
+            "address": "TODO-详细地址",
+            "latitude": "",
+            "longitude": "",
+            "sort_order": "10",
+            "is_active": "true",
+        }
+    ]
     with pytest.raises(SystemExit, match="allow-placeholder"):
         validate_court_rows(rows, app_env="dev", allow_placeholder=False)
     with pytest.raises(SystemExit, match="APP_ENV=prod"):
