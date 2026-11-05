@@ -83,7 +83,7 @@ The mini program dev server writes `apps/miniapp/dist/wx`. Import that directory
 - `GET /healthz`, `GET /api/v1/health`, `GET /api/v1/health/db`
 - `POST /api/v1/auth/login` (upsert, `isNewUser`, disabled users return 403)
 - `GET/POST/PATCH /api/v1/user/profile` and `GET /api/v1/user/{userId}/public`
-- Rules-only matching: publish, recommend (`llmApplied=false`), detail, apply, withdraw, and agree/reject. Arrive, rate, cancel, and LLM ranking are later milestones.
+- Rules-only matching, plus my-matches, cancel/leave, arrive, pairwise rating, credit counters, and the in-process scheduler. LLM ranking is still off.
 - Profile completion, NTRP monthly cooldown (`40301` + `nextEditableAt`), and avatar `fileID` checks (`40004`)
 - `GET /api/v1/courts?city=` (active courts only). Wuhan rows in the seed CSV are still `TODO` placeholders
 - Mini program launch login, onboarding (`mode=onboarding`), personal center, and a court picker on the publish tab
@@ -103,4 +103,4 @@ Open `apps/miniapp/dist/wx` in WeChat DevTools (`pnpm --filter @tennis/miniapp d
 
 ## Next milestone
 
-My matches, arrival, ratings, credit, and the scheduler (M3), then LLM re-ranking (M4). A verified Wuhan court CSV is still a product-owner task. Cloud Hosting wiring stays environment-driven. The image job in CI builds `apps/api` only.
+LLM re-ranking (M4). A verified Wuhan court CSV is still a product-owner task. Cloud Hosting wiring stays environment-driven. The image job in CI builds `apps/api` only.

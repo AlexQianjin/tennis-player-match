@@ -12,16 +12,31 @@ from tennis_match_api.match_schemas import (
     ApplicationList,
     ApplyIn,
     ApplyResult,
+    ArriveIn,
+    ArriveResult,
+    CancelIn,
+    CancelPreview,
+    CancelResult,
     HandleIn,
     HandleResult,
     MatchDetail,
+    MyMatchPage,
     PublishIn,
+    RateIn,
+    RateResult,
     RecommendPage,
     WithdrawIn,
     WithdrawResult,
 )
 from tennis_match_api.models import AppUser
 from tennis_match_api.response import ApiResponse
+from tennis_match_api.services.lifecycle_service import (
+    arrive_match,
+    cancel_match,
+    cancel_preview,
+    my_matches,
+    rate_match,
+)
 from tennis_match_api.services.match_service import (
     apply_to_match,
     handle_application,
@@ -161,3 +176,73 @@ async def handle(
         clock,
     )
     return ApiResponse(data=result)
+
+
+@router.get("/match/cancel/preview", response_model=ApiResponse[CancelPreview])
+async def preview_cancel(
+    user: Annotated[AppUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    clock: Annotated[Clock, Depends(get_clock)],
+    request_id: Annotated[str, Query(alias="requestId")],
+) -> ApiResponse[CancelPreview]:
+    return ApiResponse(data=await cancel_preview(session, user, request_id, clock))
+
+
+@router.post("/match/cancel", response_model=ApiResponse[CancelResult])
+async def cancel(
+    payload: CancelIn,
+    user: Annotated[AppUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    clock: Annotated[Clock, Depends(get_clock)],
+) -> ApiResponse[CancelResult]:
+    result = await cancel_match(session, user, payload.request_id, payload.reason, settings, clock)
+    return ApiResponse(data=result)
+
+
+@router.get("/match/my", response_model=ApiResponse[MyMatchPage])
+async def my(
+    user: Annotated[AppUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    clock: Annotated[Clock, Depends(get_clock)],
+    kind: Annotated[Literal["all", "published", "applied", "matched"], Query(alias="type")] = "all",
+    tab: Annotated[
+        Literal["pending", "confirmed", "completed", "cancelled"] | None, Query()
+    ] = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(alias="pageSize", ge=1, le=50)] = 10,
+) -> ApiResponse[MyMatchPage]:
+    data = await my_matches(
+        session,
+        user,
+        kind=kind,
+        tab=tab,
+        page=page,
+        page_size=page_size,
+        settings=settings,
+        clock=clock,
+    )
+    return ApiResponse(data=data)
+
+
+@router.post("/match/arrive", response_model=ApiResponse[ArriveResult])
+async def arrive(
+    payload: ArriveIn,
+    user: Annotated[AppUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    clock: Annotated[Clock, Depends(get_clock)],
+) -> ApiResponse[ArriveResult]:
+    return ApiResponse(data=await arrive_match(session, user, payload.request_id, settings, clock))
+
+
+@router.post("/match/rate", response_model=ApiResponse[RateResult])
+async def rate(
+    payload: RateIn,
+    user: Annotated[AppUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    clock: Annotated[Clock, Depends(get_clock)],
+) -> ApiResponse[RateResult]:
+    pairs = [(item.ratee_id, item.score) for item in payload.ratings]
+    return ApiResponse(data=await rate_match(session, user, payload.request_id, pairs, clock))

@@ -34,7 +34,16 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             "message": "confirm public network access is disabled before trusting X-WX-OPENID",
         },
     )
+    if settings.scheduler_enabled:
+        from tennis_match_api.services.scheduler import start_scheduler, startup_catchup
+
+        start_scheduler(settings)
+        await startup_catchup()
     yield
+    if settings.scheduler_enabled:
+        from tennis_match_api.services.scheduler import stop_scheduler
+
+        await stop_scheduler()
     await dispose_engine()
 
 

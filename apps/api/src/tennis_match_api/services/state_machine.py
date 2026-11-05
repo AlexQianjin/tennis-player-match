@@ -9,6 +9,7 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime
 from functools import wraps
 
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tennis_match_api.errors import BizError
@@ -35,9 +36,13 @@ ALLOWED: dict[tuple[str, int | None, str], frozenset[int]] = {
     ("application", 1, "withdraw"): frozenset({4}),
     ("application", 1, "cancel"): frozenset({4}),
     ("application", 1, "expire"): frozenset({4}),
+    ("application", 1, "auto_cancel"): frozenset({4}),
     ("application", 2, "cancel"): frozenset({4}),
     ("application", 2, "expire"): frozenset({4}),
+    ("application", 2, "auto_cancel"): frozenset({4}),
     ("application", 2, "leave"): frozenset({4}),
+    ("user_credit", None, "confirm_inc"): frozenset({0}),
+    ("user_credit", None, "cancel_inc"): frozenset({0}),
 }
 
 
@@ -69,11 +74,14 @@ def record_transition(
     action: str,
     from_status: int | None,
     to_status: int,
-    operator_id: int,
     at: datetime,
+    operator_id: int | None = None,
+    operator_type: int = 1,
     detail: dict[str, object] | None = None,
 ) -> None:
     ensure_transition(entity_type, from_status, action, to_status)
+    if operator_type == 1 and operator_id is None:
+        raise TransitionError(entity_type, from_status, action, to_status)
     row = StateTransitionLog(
         entity_type=entity_type,
         entity_id=entity_id,
@@ -81,7 +89,7 @@ def record_transition(
         action=action,
         from_status=from_status,
         to_status=to_status,
-        operator_type=1,
+        operator_type=operator_type,
         operator_id=operator_id,
         create_time=at,
     )
@@ -98,7 +106,7 @@ def record_transition(
             "from": from_status,
             "to": to_status,
             "action": action,
-            "operator": f"user:{operator_id}",
+            "operator": f"user:{operator_id}" if operator_id is not None else "system",
         },
     )
 
@@ -111,13 +119,21 @@ def retry_on_conflict[**P, R](fn: Callable[P, Awaitable[R]]) -> Callable[P, Awai
         for _ in range(3):
             try:
                 return await fn(*args, **kwargs)
-            except ConcurrencyConflict as exc:
-                last = exc
+            except (ConcurrencyConflict, OperationalError) as exc:
+                if isinstance(exc, OperationalError) and not _is_deadlock(exc):
+                    raise
+                last = exc if isinstance(exc, ConcurrencyConflict) else ConcurrencyConflict()
                 if session is not None:
                     await session.rollback()
         raise BizError(40904, "状态已变化，请刷新后重试") from last
 
     return wrapper
+
+
+def _is_deadlock(exc: OperationalError) -> bool:
+    origin = getattr(exc, "orig", None)
+    code = origin.args[0] if origin is not None and getattr(origin, "args", None) else None
+    return code == 1213
 
 
 def _find_session(args: tuple[object, ...], kwargs: dict[str, object]) -> AsyncSession | None:

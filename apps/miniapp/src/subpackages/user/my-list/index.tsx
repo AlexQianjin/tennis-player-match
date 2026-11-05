@@ -1,7 +1,11 @@
 import { Text, View } from 'virtual:taro/components'
-import { useLoad } from 'virtual:taro/api'
+import { useDidShow, useLoad } from 'virtual:taro/api'
 import { useState } from 'react'
+import { MatchCard } from '../../../components/match-card.tsx'
 import { ProfileGate } from '../../../components/profile-gate.tsx'
+import { presentError } from '../../../services/feedback.ts'
+import { request } from '../../../services/request.ts'
+import type { MatchSummary } from '../../../stores/recommend.ts'
 
 const TITLES: Record<string, string> = {
   published: '我发布的',
@@ -10,18 +14,35 @@ const TITLES: Record<string, string> = {
 }
 
 export default function MyListPage() {
-  const [title, setTitle] = useState('我的列表')
+  const [type, setType] = useState('published')
+  const [items, setItems] = useState<MatchSummary[]>([])
+
+  async function load(next: string): Promise<void> {
+    const data = await request<{ list: MatchSummary[] }>({ url: `/match/my?type=${next}` })
+    setItems(data.list)
+  }
 
   useLoad((query) => {
-    const type = typeof query.type === 'string' ? query.type : ''
-    setTitle(TITLES[type] ?? '我的列表')
+    const next = typeof query.type === 'string' && query.type in TITLES ? query.type : 'published'
+    setType(next)
+    void load(next).catch((error: unknown) => presentError(error))
+  })
+
+  useDidShow(() => {
+    if (!type) return
+    void load(type).catch((error: unknown) => presentError(error))
   })
 
   return (
     <View className="min-h-screen bg-slate-50 px-6 py-8">
-      <Text className="block text-2xl font-bold text-emerald-800">{title}</Text>
+      <Text className="block text-2xl font-bold text-emerald-800">{TITLES[type] ?? '我的列表'}</Text>
       <ProfileGate action="查看约球记录" />
-      <Text className="mt-3 block text-sm leading-6 text-slate-600">列表会在后续版本接上。</Text>
+      {items.length === 0 ? <Text className="mt-4 block text-sm text-slate-500">还没有记录</Text> : null}
+      <View className="mt-4">
+        {items.map((item) => (
+          <MatchCard key={item.id} item={item} onChanged={() => void load(type)} />
+        ))}
+      </View>
     </View>
   )
 }

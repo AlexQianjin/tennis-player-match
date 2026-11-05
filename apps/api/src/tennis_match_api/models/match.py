@@ -85,6 +85,17 @@ class MatchParticipant(Base):
     )
 
 
+class MatchRating(Base):
+    __tablename__ = "match_rating"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    request_id: Mapped[int] = mapped_column(BigInteger)
+    rater_id: Mapped[int] = mapped_column(BigInteger)
+    ratee_id: Mapped[int] = mapped_column(BigInteger)
+    score: Mapped[int] = mapped_column(SmallInteger)
+    create_time: Mapped[datetime] = mapped_column()
+
+
 class StateTransitionLog(Base):
     __tablename__ = "state_transition_log"
 

@@ -244,6 +244,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/match/cancel/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview Cancel */
+        get: operations["preview_cancel_api_v1_match_cancel_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_api_v1_match_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My */
+        get: operations["my_api_v1_match_my_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match/arrive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Arrive */
+        post: operations["arrive_api_v1_match_arrive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match/rate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rate */
+        post: operations["rate_api_v1_match_rate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -275,6 +360,48 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["ApplyResult"] | null;
+        };
+        /** ApiResponse[ArriveResult] */
+        ApiResponse_ArriveResult_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["ArriveResult"] | null;
+        };
+        /** ApiResponse[CancelPreview] */
+        ApiResponse_CancelPreview_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["CancelPreview"] | null;
+        };
+        /** ApiResponse[CancelResult] */
+        ApiResponse_CancelResult_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["CancelResult"] | null;
         };
         /** ApiResponse[CourtList] */
         ApiResponse_CourtList_: {
@@ -346,6 +473,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["MatchDetail"] | null;
         };
+        /** ApiResponse[MyMatchPage] */
+        ApiResponse_MyMatchPage_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["MyMatchPage"] | null;
+        };
         /** ApiResponse[Profile] */
         ApiResponse_Profile_: {
             /**
@@ -359,6 +500,20 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["Profile"] | null;
+        };
+        /** ApiResponse[RateResult] */
+        ApiResponse_RateResult_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["RateResult"] | null;
         };
         /** ApiResponse[RecommendPage] */
         ApiResponse_RecommendPage_: {
@@ -440,12 +595,48 @@ export interface components {
             status: "pending" | "agreed" | "rejected" | "cancelled";
             request: components["schemas"]["MatchSummary"];
         };
+        /** ArriveIn */
+        ArriveIn: {
+            /** Requestid */
+            requestId: string;
+        };
+        /** ArriveResult */
+        ArriveResult: {
+            /** Arrived */
+            arrived: boolean;
+            /** Allarrived */
+            allArrived: boolean;
+            request: components["schemas"]["MatchSummary"];
+        };
         /** ArriveWindow */
         ArriveWindow: {
             /** From */
             from: string;
             /** To */
             to: string;
+        };
+        /** CancelIn */
+        CancelIn: {
+            /** Requestid */
+            requestId: string;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** CancelPreview */
+        CancelPreview: {
+            /** Cancelcounted */
+            cancelCounted: boolean;
+            /**
+             * Effect
+             * @enum {string}
+             */
+            effect: "reopen" | "cancel_all" | "leave";
+        };
+        /** CancelResult */
+        CancelResult: {
+            request: components["schemas"]["MatchSummary"];
+            /** Cancelcounted */
+            cancelCounted: boolean;
         };
         /** CourtList */
         CourtList: {
@@ -611,6 +802,73 @@ export interface components {
             /** Availableactions */
             availableActions?: string[];
         };
+        /** MyMatchItem */
+        MyMatchItem: {
+            /** Id */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "matched" | "completed" | "cancelled";
+            /**
+             * Matchtype
+             * @enum {string}
+             */
+            matchType: "singles" | "doubles";
+            /** Slotsneeded */
+            slotsNeeded: number;
+            /** Filledcount */
+            filledCount: number;
+            /** Date */
+            date: string;
+            /** Timeslot */
+            timeSlot: string;
+            /** Startat */
+            startAt: string;
+            court: components["schemas"]["CourtOut"];
+            publisher: components["schemas"]["UserBrief"];
+            /** Expectedntrpmin */
+            expectedNtrpMin?: number | null;
+            /** Expectedntrpmax */
+            expectedNtrpMax?: number | null;
+            /**
+             * Genderpref
+             * @enum {string}
+             */
+            genderPref: "any" | "male" | "female";
+            /**
+             * Myrole
+             * @enum {string}
+             */
+            myRole: "publisher" | "partner" | "applicant" | "none";
+            /** Myapplicationstatus */
+            myApplicationStatus?: ("pending" | "agreed" | "rejected" | "cancelled") | null;
+            /** Myapplicationid */
+            myApplicationId?: string | null;
+            /** Availableactions */
+            availableActions?: string[];
+            /**
+             * Tab
+             * @enum {string}
+             */
+            tab: "pending" | "confirmed" | "completed" | "cancelled";
+            /** Pendingapplicationcount */
+            pendingApplicationCount?: number | null;
+        };
+        /** MyMatchPage */
+        MyMatchPage: {
+            /** List */
+            list: components["schemas"]["MyMatchItem"][];
+            /** Page */
+            page: number;
+            /** Pagesize */
+            pageSize: number;
+            /** Total */
+            total: number;
+            /** Hasmore */
+            hasMore: boolean;
+        };
         /** ParticipantOut */
         ParticipantOut: {
             user: components["schemas"]["UserBrief"];
@@ -727,6 +985,29 @@ export interface components {
              * @enum {string}
              */
             genderPref: "any" | "male" | "female";
+        };
+        /** RateIn */
+        RateIn: {
+            /** Requestid */
+            requestId: string;
+            /** Ratings */
+            ratings: components["schemas"]["RatingIn"][];
+        };
+        /** RateResult */
+        RateResult: {
+            /** Rated */
+            rated: boolean;
+            /** Creditdelta */
+            creditDelta: number;
+            /** Mycreditscore */
+            myCreditScore: number;
+        };
+        /** RatingIn */
+        RatingIn: {
+            /** Rateeid */
+            rateeId: string;
+            /** Score */
+            score: number;
         };
         /** RecommendItem */
         RecommendItem: {
@@ -1340,6 +1621,170 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_HandleResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_cancel_api_v1_match_cancel_preview_get: {
+        parameters: {
+            query: {
+                requestId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_CancelPreview_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_api_v1_match_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_CancelResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_api_v1_match_my_get: {
+        parameters: {
+            query?: {
+                type?: "all" | "published" | "applied" | "matched";
+                tab?: ("pending" | "confirmed" | "completed" | "cancelled") | null;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_MyMatchPage_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    arrive_api_v1_match_arrive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArriveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ArriveResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rate_api_v1_match_rate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_RateResult_"];
                 };
             };
             /** @description Validation Error */

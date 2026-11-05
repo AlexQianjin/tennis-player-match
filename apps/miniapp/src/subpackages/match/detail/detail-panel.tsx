@@ -2,6 +2,7 @@ import { Text, View } from 'virtual:taro/components'
 import Taro, { useDidShow } from 'virtual:taro/api'
 import { useState } from 'react'
 import { presentError } from '../../../services/feedback.ts'
+import { confirmAndCancel, markArrived } from '../../../services/match-actions.ts'
 import { request } from '../../../services/request.ts'
 import type { MatchSummary } from '../../../stores/recommend.ts'
 
@@ -27,6 +28,9 @@ const ACTION_LABEL: Record<string, string> = {
   apply: '申请加入',
   withdraw: '撤回申请',
   viewApplications: '查看申请',
+  cancel: '取消约球',
+  arrive: '已到场',
+  rate: '去评分',
 }
 
 export default function DetailPanel({ requestId }: { requestId: string }) {
@@ -60,6 +64,13 @@ export default function DetailPanel({ requestId }: { requestId: string }) {
         await Taro.navigateTo({
           url: `/subpackages/match/applications/index?requestId=${detail.id}`,
         })
+      } else if (action === 'cancel') {
+        if (await confirmAndCancel(detail.id)) await load()
+      } else if (action === 'arrive') {
+        await markArrived(detail.id)
+        await load()
+      } else if (action === 'rate') {
+        await Taro.navigateTo({ url: `/subpackages/match/rate/index?id=${detail.id}` })
       }
     } catch (error) {
       await presentError(error)

@@ -172,3 +172,67 @@ class ApplicationList(CamelModel):
 class HandleResult(CamelModel):
     application_status: ApplicationStatusName
     request: MatchSummary
+
+
+class CancelIn(CamelModel):
+    request_id: str
+    reason: str | None = None
+
+    @field_validator("reason")
+    @classmethod
+    def _reason(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        text = value.strip()
+        if len(text) > 100:
+            raise ValueError("reason must be at most 100 characters")
+        return text or None
+
+
+class CancelPreview(CamelModel):
+    cancel_counted: bool
+    effect: Literal["reopen", "cancel_all", "leave"]
+
+
+class CancelResult(CamelModel):
+    request: MatchSummary
+    cancel_counted: bool
+
+
+class ArriveIn(CamelModel):
+    request_id: str
+
+
+class ArriveResult(CamelModel):
+    arrived: bool
+    all_arrived: bool
+    request: MatchSummary
+
+
+class RatingIn(CamelModel):
+    ratee_id: str
+    score: int = Field(ge=1, le=5)
+
+
+class RateIn(CamelModel):
+    request_id: str
+    ratings: list[RatingIn]
+
+
+class RateResult(CamelModel):
+    rated: bool
+    credit_delta: int
+    my_credit_score: int
+
+
+class MyMatchItem(MatchSummary):
+    tab: Literal["pending", "confirmed", "completed", "cancelled"]
+    pending_application_count: int | None = None
+
+
+class MyMatchPage(CamelModel):
+    items: list[MyMatchItem] = Field(serialization_alias="list", validation_alias="list")
+    page: int
+    page_size: int
+    total: int
+    has_more: bool

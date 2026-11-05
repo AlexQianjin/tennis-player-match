@@ -708,6 +708,265 @@
           }
         }
       }
+    },
+    "/api/v1/match/cancel/preview": {
+      "get": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Preview Cancel",
+        "operationId": "preview_cancel_api_v1_match_cancel_preview_get",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Requestid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_CancelPreview_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match/cancel": {
+      "post": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Cancel",
+        "operationId": "cancel_api_v1_match_cancel_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_CancelResult_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match/my": {
+      "get": {
+        "tags": [
+          "match"
+        ],
+        "summary": "My",
+        "operationId": "my_api_v1_match_my_get",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "all",
+                "published",
+                "applied",
+                "matched"
+              ],
+              "type": "string",
+              "default": "all",
+              "title": "Type"
+            }
+          },
+          {
+            "name": "tab",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "confirmed",
+                    "completed",
+                    "cancelled"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tab"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_MyMatchPage_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match/arrive": {
+      "post": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Arrive",
+        "operationId": "arrive_api_v1_match_arrive_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArriveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_ArriveResult_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match/rate": {
+      "post": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Rate",
+        "operationId": "rate_api_v1_match_rate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_RateResult_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -763,6 +1022,84 @@
         },
         "type": "object",
         "title": "ApiResponse[ApplyResult]"
+      },
+      "ApiResponse_ArriveResult_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ArriveResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[ArriveResult]"
+      },
+      "ApiResponse_CancelPreview_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CancelPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[CancelPreview]"
+      },
+      "ApiResponse_CancelResult_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CancelResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[CancelResult]"
       },
       "ApiResponse_CourtList_": {
         "properties": {
@@ -894,6 +1231,32 @@
         "type": "object",
         "title": "ApiResponse[MatchDetail]"
       },
+      "ApiResponse_MyMatchPage_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MyMatchPage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[MyMatchPage]"
+      },
       "ApiResponse_Profile_": {
         "properties": {
           "code": {
@@ -919,6 +1282,32 @@
         },
         "type": "object",
         "title": "ApiResponse[Profile]"
+      },
+      "ApiResponse_RateResult_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RateResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[RateResult]"
       },
       "ApiResponse_RecommendPage_": {
         "properties": {
@@ -1110,6 +1499,41 @@
         ],
         "title": "ApplyResult"
       },
+      "ArriveIn": {
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "title": "Requestid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requestId"
+        ],
+        "title": "ArriveIn"
+      },
+      "ArriveResult": {
+        "properties": {
+          "arrived": {
+            "type": "boolean",
+            "title": "Arrived"
+          },
+          "allArrived": {
+            "type": "boolean",
+            "title": "Allarrived"
+          },
+          "request": {
+            "$ref": "#/components/schemas/MatchSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "arrived",
+          "allArrived",
+          "request"
+        ],
+        "title": "ArriveResult"
+      },
       "ArriveWindow": {
         "properties": {
           "from": {
@@ -1127,6 +1551,70 @@
           "to"
         ],
         "title": "ArriveWindow"
+      },
+      "CancelIn": {
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "title": "Requestid"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requestId"
+        ],
+        "title": "CancelIn"
+      },
+      "CancelPreview": {
+        "properties": {
+          "cancelCounted": {
+            "type": "boolean",
+            "title": "Cancelcounted"
+          },
+          "effect": {
+            "type": "string",
+            "enum": [
+              "reopen",
+              "cancel_all",
+              "leave"
+            ],
+            "title": "Effect"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cancelCounted",
+          "effect"
+        ],
+        "title": "CancelPreview"
+      },
+      "CancelResult": {
+        "properties": {
+          "request": {
+            "$ref": "#/components/schemas/MatchSummary"
+          },
+          "cancelCounted": {
+            "type": "boolean",
+            "title": "Cancelcounted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request",
+          "cancelCounted"
+        ],
+        "title": "CancelResult"
       },
       "CourtList": {
         "properties": {
@@ -1640,6 +2128,208 @@
         ],
         "title": "MatchSummary"
       },
+      "MyMatchItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "matched",
+              "completed",
+              "cancelled"
+            ],
+            "title": "Status"
+          },
+          "matchType": {
+            "type": "string",
+            "enum": [
+              "singles",
+              "doubles"
+            ],
+            "title": "Matchtype"
+          },
+          "slotsNeeded": {
+            "type": "integer",
+            "title": "Slotsneeded"
+          },
+          "filledCount": {
+            "type": "integer",
+            "title": "Filledcount"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "timeSlot": {
+            "type": "string",
+            "title": "Timeslot"
+          },
+          "startAt": {
+            "type": "string",
+            "title": "Startat"
+          },
+          "court": {
+            "$ref": "#/components/schemas/CourtOut"
+          },
+          "publisher": {
+            "$ref": "#/components/schemas/UserBrief"
+          },
+          "expectedNtrpMin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedntrpmin"
+          },
+          "expectedNtrpMax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedntrpmax"
+          },
+          "genderPref": {
+            "type": "string",
+            "enum": [
+              "any",
+              "male",
+              "female"
+            ],
+            "title": "Genderpref"
+          },
+          "myRole": {
+            "type": "string",
+            "enum": [
+              "publisher",
+              "partner",
+              "applicant",
+              "none"
+            ],
+            "title": "Myrole"
+          },
+          "myApplicationStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "agreed",
+                  "rejected",
+                  "cancelled"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Myapplicationstatus"
+          },
+          "myApplicationId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Myapplicationid"
+          },
+          "availableActions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Availableactions"
+          },
+          "tab": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "completed",
+              "cancelled"
+            ],
+            "title": "Tab"
+          },
+          "pendingApplicationCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pendingapplicationcount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "matchType",
+          "slotsNeeded",
+          "filledCount",
+          "date",
+          "timeSlot",
+          "startAt",
+          "court",
+          "publisher",
+          "genderPref",
+          "myRole",
+          "tab"
+        ],
+        "title": "MyMatchItem"
+      },
+      "MyMatchPage": {
+        "properties": {
+          "list": {
+            "items": {
+              "$ref": "#/components/schemas/MyMatchItem"
+            },
+            "type": "array",
+            "title": "List"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Pagesize"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore"
+          }
+        },
+        "type": "object",
+        "required": [
+          "list",
+          "page",
+          "pageSize",
+          "total",
+          "hasMore"
+        ],
+        "title": "MyMatchPage"
+      },
       "ParticipantOut": {
         "properties": {
           "user": {
@@ -2028,6 +2718,70 @@
           "matchType"
         ],
         "title": "PublishIn"
+      },
+      "RateIn": {
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "title": "Requestid"
+          },
+          "ratings": {
+            "items": {
+              "$ref": "#/components/schemas/RatingIn"
+            },
+            "type": "array",
+            "title": "Ratings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requestId",
+          "ratings"
+        ],
+        "title": "RateIn"
+      },
+      "RateResult": {
+        "properties": {
+          "rated": {
+            "type": "boolean",
+            "title": "Rated"
+          },
+          "creditDelta": {
+            "type": "integer",
+            "title": "Creditdelta"
+          },
+          "myCreditScore": {
+            "type": "integer",
+            "title": "Mycreditscore"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rated",
+          "creditDelta",
+          "myCreditScore"
+        ],
+        "title": "RateResult"
+      },
+      "RatingIn": {
+        "properties": {
+          "rateeId": {
+            "type": "string",
+            "title": "Rateeid"
+          },
+          "score": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rateeId",
+          "score"
+        ],
+        "title": "RatingIn"
       },
       "RecommendItem": {
         "properties": {

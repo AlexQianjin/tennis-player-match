@@ -24,12 +24,14 @@ export function messageFor(error: unknown): string {
     if (error.code === 40003) return '球场不存在或不在当前城市'
     if (error.code === 40004) return '头像文件无效'
     if (error.code === 401) return '请在微信中打开'
+    if (error.code === 40302) return '未到约定时间或已超过确认窗口'
     if (error.code === 40303) return '不满足该约球的等级或性别要求'
     if (error.code === 40304) return '不能申请自己发布的约球'
     if (error.code === 40901) return '您已有一个进行中的约球，请先完成或取消'
     if (error.code === 40902) return '您已申请过该约球'
     if (error.code === 40903) return '该约球已满员'
     if (error.code === 40904) return '状态已变化，请刷新后重试'
+    if (error.code === 40905) return '已评分，不可修改'
     return error.message || '请求失败'
   }
   if (error instanceof NetworkError) return error.message

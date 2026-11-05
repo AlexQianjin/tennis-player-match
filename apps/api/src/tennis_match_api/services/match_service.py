@@ -29,7 +29,14 @@ from tennis_match_api.match_schemas import (
     UserBrief,
     WithdrawResult,
 )
-from tennis_match_api.models import Application, AppUser, Court, MatchParticipant, MatchRequest
+from tennis_match_api.models import (
+    Application,
+    AppUser,
+    Court,
+    MatchParticipant,
+    MatchRating,
+    MatchRequest,
+)
 from tennis_match_api.ntrp import parse_ntrp
 from tennis_match_api.services.profile_service import ensure_profile_completed, public_from_user
 from tennis_match_api.services.ranking import credit_norm, ntrp_closeness, rule_score
@@ -387,7 +394,7 @@ async def match_detail(
         publisher=public_from_user(publisher),
         participants=participants,
         pending_application_count=pending,
-        my_ratings=[],
+        my_ratings=await _my_ratings(session, request.id, user.id),
         cancel_reason=request.cancel_reason,
         matched_time=None
         if request.matched_time is None
@@ -646,6 +653,20 @@ def _to_summary(
     )
 
 
+async def _my_ratings(
+    session: AsyncSession, request_id: int, user_id: int
+) -> list[dict[str, object]]:
+    rows = (
+        await session.scalars(
+            select(MatchRating).where(
+                MatchRating.request_id == request_id,
+                MatchRating.rater_id == user_id,
+            )
+        )
+    ).all()
+    return [{"rateeId": str(row.ratee_id), "score": row.score} for row in rows]
+
+
 async def _participants(session: AsyncSession, request_id: int) -> list[ParticipantOut]:
     rows = (
         await session.execute(
@@ -779,7 +800,10 @@ async def _bump(
         conditions.append(MatchRequest.status == 1)
         conditions.append(MatchRequest.filled_count < MatchRequest.slots_needed)
     changed = await session.execute(
-        update(MatchRequest).where(*conditions).values(version=request.version + 1, **values)
+        update(MatchRequest)
+        .where(*conditions)
+        .values(version=request.version + 1, **values)
+        .execution_options(synchronize_session=False)
     )
     if changed.rowcount != 1:
         raise ConcurrencyConflict()
