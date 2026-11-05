@@ -1,12 +1,13 @@
 """Import courts from CSV.
 
-``seed/courts_wuhan.csv`` is still placeholder data: every name, district, and
-address contains ``TODO``. Real Wuhan venues are a product-owner task and must
-not be invented in this repo. Replace that CSV later; rows are upserted by
-``(city, name)`` and the court API does not need to change.
+``seed/courts_wuhan.csv`` is a first public-venue set for Wuhan. Most
+latitude/longitude cells are blank until someone checks them as GCJ-02 on a
+WeChat map. Product should still spot-check names and addresses there. Rows
+are upserted by ``(city, name)``.
 
-``--allow-placeholder`` is for local/CI only. ``APP_ENV=prod`` refuses the file
-while any placeholder row remains.
+``--allow-placeholder`` is only for a future CSV that still contains ``TODO``
+in the name, district, or address. ``APP_ENV=prod`` refuses those rows even
+when the flag is set. The current Wuhan file imports without the flag.
 """
 
 import argparse

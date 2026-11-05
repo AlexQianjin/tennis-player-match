@@ -54,10 +54,10 @@ pnpm --filter @tennis/api setup
 cp apps/api/.env.example apps/api/.env
 pnpm db:up
 pnpm db:migrate
-pnpm --filter @tennis/api seed -- --allow-placeholder
+pnpm --filter @tennis/api seed
 ```
 
-The court CSV is still placeholder text (`TODO-球场名称-01` and two more rows). Real Wuhan court names are **not** in this repo and must not be invented here — that list is a product-owner task. The importer upserts by `(city, name)`, so a verified CSV can replace `apps/api/seed/courts_wuhan.csv` later without API changes. The placeholder file is refused unless you pass `--allow-placeholder`, and it is refused entirely when `APP_ENV=prod`.
+`apps/api/seed/courts_wuhan.csv` is a first set of public Wuhan venues. The importer upserts by `(city, name)`. Latitude and longitude are blank except 汉江湾体育公园网球场 and 傲云网球馆(光谷店) (GCJ-02 from Amap; the latter is place B0MUFRHACF). Product should still spot-check the rows on a WeChat map before treating them as final. A future CSV that puts `TODO` in the name, district, or address is refused unless you pass `--allow-placeholder`, and it is refused entirely when `APP_ENV=prod`.
 
 Local API auth is `AUTH_MODE=dev`. The mini program sends `X-Dev-Openid` (storage key `devOpenid`, default `dev_user_1`) only on the http transport. That header is ignored when `AUTH_MODE=wxcloud`.
 
@@ -86,7 +86,7 @@ The mini program dev server writes `apps/miniapp/dist/wx`. Import that directory
 - Matching through recommend, apply, my-matches, cancel/leave, arrive, pairwise rating, credit, and the in-process scheduler
 - LLM re-ranking on the server when `LLM_ENABLED=true` and `AI_MODEL_BASE_URL`, `AI_MODEL_API_KEY`, and `AI_MODEL_NAME` are all set. Otherwise recommend stays on the rule order (`llmApplied=false`). The mini program never sees the key. See [Enabling LLM locally](#enabling-llm-locally).
 - Profile completion, NTRP monthly cooldown (`40301` + `nextEditableAt`), and avatar `fileID` checks (`40004`)
-- `GET /api/v1/courts?city=` (active courts only). Wuhan rows in the seed CSV are still `TODO` placeholders
+- `GET /api/v1/courts?city=` (active courts only). The Wuhan seed is a first public-venue set; most coordinates are still blank pending a GCJ-02 check on a WeChat map
 - Mini program launch login, onboarding (`mode=onboarding`), personal center, and a court picker on the publish tab
 - Alembic `0001_init` executes `apps/api/migrations/sql/0001_init.sql` (the validated DDL without `CREATE DATABASE`)
 - asyncmy connections set `time_zone='+00:00'`, `CLIENT.FOUND_ROWS`, and retry transient errors including a resuming CynosDB
@@ -117,4 +117,4 @@ Leave `LLM_DEBUG_API_ENABLED=false` unless you also set `INTERNAL_API_TOKEN` and
 
 ## Next milestone
 
-M5 stays out of this branch: Cloud Run production wiring, content safety, and mini program review submission. A verified Wuhan court CSV is still a product-owner task. Cloud Hosting stays environment-driven. The image job in CI builds `apps/api` only.
+M5 stays out of this branch: Cloud Run production wiring, content safety, and mini program review submission. The Wuhan court seed is a first public-venue set and still needs a WeChat-map spot-check, especially the blank coordinates. Cloud Hosting stays environment-driven. The image job in CI builds `apps/api` only.
