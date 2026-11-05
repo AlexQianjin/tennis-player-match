@@ -57,7 +57,7 @@ pnpm db:migrate
 pnpm --filter @tennis/api seed
 ```
 
-`apps/api/seed/courts_wuhan.csv` is a first set of public Wuhan venues. The importer upserts by `(city, name)`. Latitude and longitude are blank except 汉江湾体育公园网球场 (GCJ-02 from Amap). Product should still spot-check the rows on a WeChat map before treating them as final. A future CSV that puts `TODO` in the name, district, or address is refused unless you pass `--allow-placeholder`, and it is refused entirely when `APP_ENV=prod`.
+`apps/api/seed/courts_wuhan.csv` is a first set of public Wuhan venues. The importer upserts by `(city, name)`. Latitude and longitude are blank except 汉江湾体育公园网球场 and 傲云网球馆(光谷店) (GCJ-02 from Amap; the latter is place B0MUFRHACF). Product should still spot-check the rows on a WeChat map before treating them as final. A future CSV that puts `TODO` in the name, district, or address is refused unless you pass `--allow-placeholder`, and it is refused entirely when `APP_ENV=prod`.
 
 Local API auth is `AUTH_MODE=dev`. The mini program sends `X-Dev-Openid` (storage key `devOpenid`, default `dev_user_1`) only on the http transport. That header is ignored when `AUTH_MODE=wxcloud`.
 

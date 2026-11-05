@@ -121,7 +121,10 @@ def test_wuhan_court_csv_is_public_venues_without_placeholder_flag() -> None:
     assert "TODO" not in _CSV.read_text(encoding="utf-8")
     coords = [(row["latitude"], row["longitude"]) for row in rows]
     assert coords[1] == ("30.585875", "114.201625")
-    assert all(lat == "" and lng == "" for lat, lng in coords[:1] + coords[2:])
+    assert coords[7] == ("30.510075", "114.468125")
+    assert rows[7]["address"] == "珞喻东路与光谷三路交叉口西260米"
+    blank = [pair for index, pair in enumerate(coords) if index not in {1, 7}]
+    assert all(lat == "" and lng == "" for lat, lng in blank)
     validate_court_rows(rows, app_env="dev", allow_placeholder=False)
     validate_court_rows(rows, app_env="prod", allow_placeholder=False)
 

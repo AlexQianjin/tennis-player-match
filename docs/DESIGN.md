@@ -2226,7 +2226,7 @@ export async function request<T>(o: ReqOpts, attempt = 0): Promise<T> {
 
 ## 11. 种子数据计划（武汉球场）
 
-`apps/api/seed/courts_wuhan.csv` 现在是首批公开场馆（全民健身中心、汉江湾体育公园、五环体育中心、毛坦公园、汉口文体中心、光谷国际网球中心、好燃时刻智慧体育公园、傲云网球馆光谷店），不再含占位行。产品仍应在微信地图上逐条抽查名称与地址。坐标只在有 GCJ-02 来源时填写：目前只有汉江湾体育公园网球场（高德）写了经纬度，其余留空，不要把 WGS84/OSM 坐标换算后填入。傲云网球馆光谷店不要和硚口区古田二路或汉阳店混淆。
+`apps/api/seed/courts_wuhan.csv` 现在是首批公开场馆（全民健身中心、汉江湾体育公园、五环体育中心、毛坦公园、汉口文体中心、光谷国际网球中心、好燃时刻智慧体育公园、傲云网球馆光谷店），不再含占位行。产品仍应在微信地图上逐条抽查名称与地址。坐标只在有 GCJ-02 来源时填写：汉江湾体育公园网球场与傲云网球馆(光谷店)（高德地点 B0MUFRHACF）写了经纬度，其余留空，不要把 WGS84/OSM 坐标换算后填入。傲云网球馆光谷店不要和硚口区古田二路或汉阳店混淆。
 
 1. 数据文件：`apps/api/seed/courts_wuhan.csv`，列：`name,city,district,address,latitude,longitude,sort_order,is_active`（随镜像打包，便于在云上执行）。
 2. 当前文件可直接导入。若以后某行的名称、所在区或地址再次出现 `TODO`，导入脚本在 prod 环境拒绝该文件；dev/test 必须显式加上 `--allow-placeholder`。
