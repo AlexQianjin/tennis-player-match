@@ -1,3 +1,14 @@
+"""Import courts from CSV.
+
+``seed/courts_wuhan.csv`` is still placeholder data: every name, district, and
+address contains ``TODO``. Real Wuhan venues are a product-owner task and must
+not be invented in this repo. Replace that CSV later; rows are upserted by
+``(city, name)`` and the court API does not need to change.
+
+``--allow-placeholder`` is for local/CI only. ``APP_ENV=prod`` refuses the file
+while any placeholder row remains.
+"""
+
 import argparse
 import asyncio
 import csv
@@ -16,6 +27,19 @@ _API_ROOT = Path(__file__).resolve().parents[3]
 
 def _is_placeholder(row: dict[str, str]) -> bool:
     return any("TODO" in (row.get(column) or "") for column in ("name", "district", "address"))
+
+
+def validate_court_rows(
+    rows: list[dict[str, str]],
+    *,
+    app_env: str,
+    allow_placeholder: bool,
+) -> None:
+    placeholders = [row for row in rows if _is_placeholder(row)]
+    if app_env == "prod" and placeholders:
+        raise SystemExit("refusing placeholder courts when APP_ENV=prod")
+    if placeholders and not allow_placeholder:
+        raise SystemExit("placeholder court rows require --allow-placeholder")
 
 
 def _decimal(value: str) -> Decimal | None:
@@ -43,11 +67,7 @@ async def _import_courts(path: Path, *, allow_placeholder: bool) -> None:
     settings = get_settings()
     with path.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
-    placeholders = [row for row in rows if _is_placeholder(row)]
-    if placeholders and not allow_placeholder:
-        raise SystemExit("placeholder court rows require --allow-placeholder")
-    if settings.app_env == "prod" and placeholders:
-        raise SystemExit("refusing placeholder courts when APP_ENV=prod")
+    validate_court_rows(rows, app_env=settings.app_env, allow_placeholder=allow_placeholder)
 
     factory = get_sessionmaker()
     async with factory() as session:

@@ -8,3 +8,13 @@ page {
   background: #f8fafc;
   color: #0f172a;
 }
+
+.avatar-btn {
+  margin: 16rpx 0 0;
+  padding: 12rpx 28rpx;
+  border-radius: 999rpx;
+  background: #166534;
+  color: #ffffff;
+  font-size: 28rpx;
+  line-height: 1.4;
+}

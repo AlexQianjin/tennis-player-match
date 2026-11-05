@@ -1,6 +1,6 @@
 # tennis-player-match
 
-WeChat mini program for matching tennis partners (网球约球). This repository is the M0 skeleton from `docs/DESIGN.md`: a pnpm workspace, a Vite mini program, and a FastAPI service. Product behavior beyond health, login, and the court list is still to be built.
+WeChat mini program for matching tennis partners (网球约球). This repository follows `docs/DESIGN.md`. M1 covers login, profile completion (including an avatar fileID), the personal center, and the court list. Publish / recommend / apply behavior beyond the profile gate is still later work.
 
 ## Toolchain
 
@@ -57,7 +57,7 @@ pnpm db:migrate
 pnpm --filter @tennis/api seed -- --allow-placeholder
 ```
 
-The court CSV is placeholder text (`TODO-球场名称-01`). It is refused unless you pass `--allow-placeholder`, and it is refused entirely when `APP_ENV=prod`. Real Wuhan court names and addresses are not in this repo.
+The court CSV is still placeholder text (`TODO-球场名称-01` and two more rows). Real Wuhan court names are **not** in this repo and must not be invented here — that list is a product-owner task. The importer upserts by `(city, name)`, so a verified CSV can replace `apps/api/seed/courts_wuhan.csv` later without API changes. The placeholder file is refused unless you pass `--allow-placeholder`, and it is refused entirely when `APP_ENV=prod`.
 
 Local API auth is `AUTH_MODE=dev`. The mini program sends `X-Dev-Openid` (storage key `devOpenid`, default `dev_user_1`) only on the http transport. That header is ignored when `AUTH_MODE=wxcloud`.
 
@@ -79,14 +79,27 @@ The mini program dev server writes `apps/miniapp/dist/wx`. Import that directory
 
 ## What is implemented
 
-- FastAPI envelope `{code, message, data}`, the error codes from the design, and `X-WX-*` / dev-header checks
+- FastAPI envelope `{code, message, data}`, the error codes from the design, and `X-WX-*` / dev-header checks (`AUTH_MODE=dev` is rejected when `APP_ENV=prod`)
 - `GET /healthz`, `GET /api/v1/health`, `GET /api/v1/health/db`
-- `POST /api/v1/auth/login` and `GET /api/v1/courts` against MySQL
+- `POST /api/v1/auth/login` (upsert, `isNewUser`, disabled users return 403)
+- `GET/POST/PATCH /api/v1/user/profile` and `GET /api/v1/user/{userId}/public`
+- Profile completion, NTRP monthly cooldown (`40301` + `nextEditableAt`), and avatar `fileID` checks (`40004`)
+- `GET /api/v1/courts?city=` (active courts only). Wuhan rows in the seed CSV are still `TODO` placeholders
+- Mini program launch login, onboarding (`mode=onboarding`), personal center, and a court picker on the publish tab
 - Alembic `0001_init` executes `apps/api/migrations/sql/0001_init.sql` (the validated DDL without `CREATE DATABASE`)
 - asyncmy connections set `time_zone='+00:00'`, `CLIENT.FOUND_ROWS`, and retry transient errors including a resuming CynosDB
 
-`alembic check` ignores tables that are not mapped. The SQL file is the schema source for this milestone; the ORM maps only `app_user` and `court`, which the example endpoints use. A full ORM diff is later work.
+`alembic check` ignores tables and columns that the ORM does not map yet. The SQL file remains the schema source; the ORM maps `app_user` (including `ntrp_update_time`) and `court`.
+
+Try the mini program locally with `AUTH_MODE=dev`:
+
+```sh
+pnpm dev:api
+pnpm dev:weapp
+```
+
+Open `apps/miniapp/dist/wx` in WeChat DevTools (`pnpm --filter @tennis/miniapp dev:weapp` writes that directory) and leave URL checking off. The http transport sends `X-Dev-Openid`. Choose-avatar upload is a fileID stub on that transport (`cloud://dev.local/avatars/...`) because cloud storage is not configured locally.
 
 ## Next milestone
 
-Login and profile completion, the court seed with real Wuhan data, publish / recommend, and the page flows in `docs/DESIGN.md` §13 (M1–M2). Cloud Hosting is not wired up yet. The image job in CI builds `apps/api` only.
+Publish, recommend, and apply (M2), plus a verified Wuhan court CSV from the product owner. Cloud Hosting wiring stays environment-driven. The image job in CI builds `apps/api` only.
