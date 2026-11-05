@@ -272,10 +272,498 @@
           }
         }
       }
+    },
+    "/api/v1/match/publish": {
+      "post": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Publish",
+        "operationId": "publish_api_v1_match_publish_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_MatchDetail_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match/recommend": {
+      "get": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Recommend",
+        "operationId": "recommend_api_v1_match_recommend_get",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "City"
+            }
+          },
+          {
+            "name": "ntrpMin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ntrpmin"
+            }
+          },
+          {
+            "name": "ntrpMax",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ntrpmax"
+            }
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "male",
+                    "female"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Gender"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          },
+          {
+            "name": "timeSlot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Timeslot"
+            }
+          },
+          {
+            "name": "courtId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Courtid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_RecommendPage_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match/detail/{request_id}": {
+      "get": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Detail",
+        "operationId": "detail_api_v1_match_detail__request_id__get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_MatchDetail_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match/apply": {
+      "post": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Apply",
+        "operationId": "apply_api_v1_match_apply_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_ApplyResult_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match/application/withdraw": {
+      "post": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Withdraw",
+        "operationId": "withdraw_api_v1_match_application_withdraw_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_WithdrawResult_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match/applications": {
+      "get": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Applications",
+        "operationId": "applications_api_v1_match_applications_get",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Requestid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "agreed",
+                    "rejected",
+                    "cancelled"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_ApplicationList_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match/handle": {
+      "post": {
+        "tags": [
+          "match"
+        ],
+        "summary": "Handle",
+        "operationId": "handle_api_v1_match_handle_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandleIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_HandleResult_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "ApiResponse_ApplicationList_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationList"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[ApplicationList]"
+      },
+      "ApiResponse_ApplyResult_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApplyResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[ApplyResult]"
+      },
       "ApiResponse_CourtList_": {
         "properties": {
           "code": {
@@ -301,6 +789,32 @@
         },
         "type": "object",
         "title": "ApiResponse[CourtList]"
+      },
+      "ApiResponse_HandleResult_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HandleResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[HandleResult]"
       },
       "ApiResponse_HealthData_": {
         "properties": {
@@ -354,6 +868,32 @@
         "type": "object",
         "title": "ApiResponse[LoginResult]"
       },
+      "ApiResponse_MatchDetail_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MatchDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[MatchDetail]"
+      },
       "ApiResponse_Profile_": {
         "properties": {
           "code": {
@@ -380,6 +920,32 @@
         "type": "object",
         "title": "ApiResponse[Profile]"
       },
+      "ApiResponse_RecommendPage_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecommendPage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[RecommendPage]"
+      },
       "ApiResponse_UserPublic_": {
         "properties": {
           "code": {
@@ -405,6 +971,162 @@
         },
         "type": "object",
         "title": "ApiResponse[UserPublic]"
+      },
+      "ApiResponse_WithdrawResult_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WithdrawResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[WithdrawResult]"
+      },
+      "ApplicationItem": {
+        "properties": {
+          "applicationId": {
+            "type": "string",
+            "title": "Applicationid"
+          },
+          "applicant": {
+            "$ref": "#/components/schemas/UserPublic"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "agreed",
+              "rejected",
+              "cancelled"
+            ],
+            "title": "Status"
+          },
+          "applyTime": {
+            "type": "string",
+            "title": "Applytime"
+          },
+          "llmScore": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llmscore"
+          },
+          "matchReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchreason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicationId",
+          "applicant",
+          "status",
+          "applyTime"
+        ],
+        "title": "ApplicationItem"
+      },
+      "ApplicationList": {
+        "properties": {
+          "list": {
+            "items": {
+              "$ref": "#/components/schemas/ApplicationItem"
+            },
+            "type": "array",
+            "title": "List"
+          }
+        },
+        "type": "object",
+        "required": [
+          "list"
+        ],
+        "title": "ApplicationList"
+      },
+      "ApplyIn": {
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "title": "Requestid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requestId"
+        ],
+        "title": "ApplyIn"
+      },
+      "ApplyResult": {
+        "properties": {
+          "applicationId": {
+            "type": "string",
+            "title": "Applicationid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "agreed",
+              "rejected",
+              "cancelled"
+            ],
+            "title": "Status"
+          },
+          "request": {
+            "$ref": "#/components/schemas/MatchSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicationId",
+          "status",
+          "request"
+        ],
+        "title": "ApplyResult"
+      },
+      "ArriveWindow": {
+        "properties": {
+          "from": {
+            "type": "string",
+            "title": "From"
+          },
+          "to": {
+            "type": "string",
+            "title": "To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from",
+          "to"
+        ],
+        "title": "ArriveWindow"
       },
       "CourtList": {
         "properties": {
@@ -491,6 +1213,51 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HandleIn": {
+        "properties": {
+          "applicationId": {
+            "type": "string",
+            "title": "Applicationid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "agree",
+              "reject"
+            ],
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicationId",
+          "action"
+        ],
+        "title": "HandleIn"
+      },
+      "HandleResult": {
+        "properties": {
+          "applicationStatus": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "agreed",
+              "rejected",
+              "cancelled"
+            ],
+            "title": "Applicationstatus"
+          },
+          "request": {
+            "$ref": "#/components/schemas/MatchSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicationStatus",
+          "request"
+        ],
+        "title": "HandleResult"
+      },
       "HealthData": {
         "properties": {
           "status": {
@@ -520,6 +1287,389 @@
           "userInfo"
         ],
         "title": "LoginResult"
+      },
+      "MatchDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "matched",
+              "completed",
+              "cancelled"
+            ],
+            "title": "Status"
+          },
+          "matchType": {
+            "type": "string",
+            "enum": [
+              "singles",
+              "doubles"
+            ],
+            "title": "Matchtype"
+          },
+          "slotsNeeded": {
+            "type": "integer",
+            "title": "Slotsneeded"
+          },
+          "filledCount": {
+            "type": "integer",
+            "title": "Filledcount"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "timeSlot": {
+            "type": "string",
+            "title": "Timeslot"
+          },
+          "startAt": {
+            "type": "string",
+            "title": "Startat"
+          },
+          "court": {
+            "$ref": "#/components/schemas/CourtOut"
+          },
+          "publisher": {
+            "$ref": "#/components/schemas/UserPublic"
+          },
+          "expectedNtrpMin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedntrpmin"
+          },
+          "expectedNtrpMax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedntrpmax"
+          },
+          "genderPref": {
+            "type": "string",
+            "enum": [
+              "any",
+              "male",
+              "female"
+            ],
+            "title": "Genderpref"
+          },
+          "myRole": {
+            "type": "string",
+            "enum": [
+              "publisher",
+              "partner",
+              "applicant",
+              "none"
+            ],
+            "title": "Myrole"
+          },
+          "myApplicationStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "agreed",
+                  "rejected",
+                  "cancelled"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Myapplicationstatus"
+          },
+          "myApplicationId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Myapplicationid"
+          },
+          "availableActions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Availableactions"
+          },
+          "participants": {
+            "items": {
+              "$ref": "#/components/schemas/ParticipantOut"
+            },
+            "type": "array",
+            "title": "Participants"
+          },
+          "pendingApplicationCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pendingapplicationcount"
+          },
+          "myRatings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Myratings"
+          },
+          "cancelReason": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelreason"
+          },
+          "matchedTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchedtime"
+          },
+          "completedTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completedtime"
+          },
+          "arriveWindow": {
+            "$ref": "#/components/schemas/ArriveWindow"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "matchType",
+          "slotsNeeded",
+          "filledCount",
+          "date",
+          "timeSlot",
+          "startAt",
+          "court",
+          "publisher",
+          "genderPref",
+          "myRole",
+          "participants",
+          "arriveWindow"
+        ],
+        "title": "MatchDetail"
+      },
+      "MatchSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "matched",
+              "completed",
+              "cancelled"
+            ],
+            "title": "Status"
+          },
+          "matchType": {
+            "type": "string",
+            "enum": [
+              "singles",
+              "doubles"
+            ],
+            "title": "Matchtype"
+          },
+          "slotsNeeded": {
+            "type": "integer",
+            "title": "Slotsneeded"
+          },
+          "filledCount": {
+            "type": "integer",
+            "title": "Filledcount"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "timeSlot": {
+            "type": "string",
+            "title": "Timeslot"
+          },
+          "startAt": {
+            "type": "string",
+            "title": "Startat"
+          },
+          "court": {
+            "$ref": "#/components/schemas/CourtOut"
+          },
+          "publisher": {
+            "$ref": "#/components/schemas/UserBrief"
+          },
+          "expectedNtrpMin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedntrpmin"
+          },
+          "expectedNtrpMax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedntrpmax"
+          },
+          "genderPref": {
+            "type": "string",
+            "enum": [
+              "any",
+              "male",
+              "female"
+            ],
+            "title": "Genderpref"
+          },
+          "myRole": {
+            "type": "string",
+            "enum": [
+              "publisher",
+              "partner",
+              "applicant",
+              "none"
+            ],
+            "title": "Myrole"
+          },
+          "myApplicationStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "agreed",
+                  "rejected",
+                  "cancelled"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Myapplicationstatus"
+          },
+          "myApplicationId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Myapplicationid"
+          },
+          "availableActions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Availableactions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "matchType",
+          "slotsNeeded",
+          "filledCount",
+          "date",
+          "timeSlot",
+          "startAt",
+          "court",
+          "publisher",
+          "genderPref",
+          "myRole"
+        ],
+        "title": "MatchSummary"
+      },
+      "ParticipantOut": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserBrief"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "publisher",
+              "partner"
+            ],
+            "title": "Role"
+          },
+          "arrived": {
+            "type": "boolean",
+            "title": "Arrived"
+          },
+          "rated": {
+            "type": "boolean",
+            "title": "Rated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "role",
+          "arrived",
+          "rated"
+        ],
+        "title": "ParticipantOut"
       },
       "Profile": {
         "properties": {
@@ -803,6 +1953,383 @@
         "type": "object",
         "title": "ProfileUpdate"
       },
+      "PublishIn": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "timeSlot": {
+            "type": "string",
+            "title": "Timeslot"
+          },
+          "courtId": {
+            "type": "string",
+            "title": "Courtid"
+          },
+          "matchType": {
+            "type": "string",
+            "enum": [
+              "singles",
+              "doubles"
+            ],
+            "title": "Matchtype"
+          },
+          "slotsNeeded": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slotsneeded"
+          },
+          "expectedNtrpMin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedntrpmin"
+          },
+          "expectedNtrpMax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedntrpmax"
+          },
+          "genderPref": {
+            "type": "string",
+            "enum": [
+              "any",
+              "male",
+              "female"
+            ],
+            "title": "Genderpref",
+            "default": "any"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "timeSlot",
+          "courtId",
+          "matchType"
+        ],
+        "title": "PublishIn"
+      },
+      "RecommendItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "matched",
+              "completed",
+              "cancelled"
+            ],
+            "title": "Status"
+          },
+          "matchType": {
+            "type": "string",
+            "enum": [
+              "singles",
+              "doubles"
+            ],
+            "title": "Matchtype"
+          },
+          "slotsNeeded": {
+            "type": "integer",
+            "title": "Slotsneeded"
+          },
+          "filledCount": {
+            "type": "integer",
+            "title": "Filledcount"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "timeSlot": {
+            "type": "string",
+            "title": "Timeslot"
+          },
+          "startAt": {
+            "type": "string",
+            "title": "Startat"
+          },
+          "court": {
+            "$ref": "#/components/schemas/CourtOut"
+          },
+          "publisher": {
+            "$ref": "#/components/schemas/UserBrief"
+          },
+          "expectedNtrpMin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedntrpmin"
+          },
+          "expectedNtrpMax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedntrpmax"
+          },
+          "genderPref": {
+            "type": "string",
+            "enum": [
+              "any",
+              "male",
+              "female"
+            ],
+            "title": "Genderpref"
+          },
+          "myRole": {
+            "type": "string",
+            "enum": [
+              "publisher",
+              "partner",
+              "applicant",
+              "none"
+            ],
+            "title": "Myrole"
+          },
+          "myApplicationStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "agreed",
+                  "rejected",
+                  "cancelled"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Myapplicationstatus"
+          },
+          "myApplicationId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Myapplicationid"
+          },
+          "availableActions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Availableactions"
+          },
+          "ruleScore": {
+            "type": "number",
+            "title": "Rulescore"
+          },
+          "llmScore": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llmscore"
+          },
+          "finalScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalscore"
+          },
+          "matchReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchreason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "matchType",
+          "slotsNeeded",
+          "filledCount",
+          "date",
+          "timeSlot",
+          "startAt",
+          "court",
+          "publisher",
+          "genderPref",
+          "myRole",
+          "ruleScore"
+        ],
+        "title": "RecommendItem"
+      },
+      "RecommendPage": {
+        "properties": {
+          "list": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendItem"
+            },
+            "type": "array",
+            "title": "List"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Pagesize"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore"
+          },
+          "llmApplied": {
+            "type": "boolean",
+            "title": "Llmapplied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "list",
+          "page",
+          "pageSize",
+          "total",
+          "hasMore",
+          "llmApplied"
+        ],
+        "title": "RecommendPage"
+      },
+      "UserBrief": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar"
+          },
+          "ntrp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ntrp"
+          },
+          "gender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gender"
+          },
+          "creditScore": {
+            "type": "integer",
+            "title": "Creditscore",
+            "default": 0
+          },
+          "avgRating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avgrating"
+          },
+          "ratingCount": {
+            "type": "integer",
+            "title": "Ratingcount",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "UserBrief"
+      },
       "UserPublic": {
         "properties": {
           "id": {
@@ -960,6 +2487,38 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WithdrawIn": {
+        "properties": {
+          "applicationId": {
+            "type": "string",
+            "title": "Applicationid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicationId"
+        ],
+        "title": "WithdrawIn"
+      },
+      "WithdrawResult": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "agreed",
+              "rejected",
+              "cancelled"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "WithdrawResult"
       }
     }
   }

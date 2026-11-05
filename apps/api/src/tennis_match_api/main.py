@@ -17,6 +17,7 @@ from tennis_match_api.logging_setup import configure_logging
 from tennis_match_api.routers.auth import router as auth_router
 from tennis_match_api.routers.court import router as court_router
 from tennis_match_api.routers.health import router as health_router
+from tennis_match_api.routers.match import router as match_router
 from tennis_match_api.routers.user import router as user_router
 
 log = logging.getLogger(__name__)
@@ -45,6 +46,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(user_router)
     app.include_router(court_router)
+    app.include_router(match_router)
 
     @app.middleware("http")
     async def request_context(request: Request, call_next):  # type: ignore[no-untyped-def]

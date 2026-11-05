@@ -125,10 +125,157 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/match/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish */
+        post: operations["publish_api_v1_match_publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match/recommend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recommend */
+        get: operations["recommend_api_v1_match_recommend_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match/detail/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_api_v1_match_detail__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply */
+        post: operations["apply_api_v1_match_apply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match/application/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Withdraw */
+        post: operations["withdraw_api_v1_match_application_withdraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Applications */
+        get: operations["applications_api_v1_match_applications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match/handle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Handle */
+        post: operations["handle_api_v1_match_handle_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ApiResponse[ApplicationList] */
+        ApiResponse_ApplicationList_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["ApplicationList"] | null;
+        };
+        /** ApiResponse[ApplyResult] */
+        ApiResponse_ApplyResult_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["ApplyResult"] | null;
+        };
         /** ApiResponse[CourtList] */
         ApiResponse_CourtList_: {
             /**
@@ -142,6 +289,20 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["CourtList"] | null;
+        };
+        /** ApiResponse[HandleResult] */
+        ApiResponse_HandleResult_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["HandleResult"] | null;
         };
         /** ApiResponse[HealthData] */
         ApiResponse_HealthData_: {
@@ -171,6 +332,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["LoginResult"] | null;
         };
+        /** ApiResponse[MatchDetail] */
+        ApiResponse_MatchDetail_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["MatchDetail"] | null;
+        };
         /** ApiResponse[Profile] */
         ApiResponse_Profile_: {
             /**
@@ -185,6 +360,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["Profile"] | null;
         };
+        /** ApiResponse[RecommendPage] */
+        ApiResponse_RecommendPage_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["RecommendPage"] | null;
+        };
         /** ApiResponse[UserPublic] */
         ApiResponse_UserPublic_: {
             /**
@@ -198,6 +387,65 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["UserPublic"] | null;
+        };
+        /** ApiResponse[WithdrawResult] */
+        ApiResponse_WithdrawResult_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["WithdrawResult"] | null;
+        };
+        /** ApplicationItem */
+        ApplicationItem: {
+            /** Applicationid */
+            applicationId: string;
+            applicant: components["schemas"]["UserPublic"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "agreed" | "rejected" | "cancelled";
+            /** Applytime */
+            applyTime: string;
+            /** Llmscore */
+            llmScore?: number | null;
+            /** Matchreason */
+            matchReason?: string | null;
+        };
+        /** ApplicationList */
+        ApplicationList: {
+            /** List */
+            list: components["schemas"]["ApplicationItem"][];
+        };
+        /** ApplyIn */
+        ApplyIn: {
+            /** Requestid */
+            requestId: string;
+        };
+        /** ApplyResult */
+        ApplyResult: {
+            /** Applicationid */
+            applicationId: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "agreed" | "rejected" | "cancelled";
+            request: components["schemas"]["MatchSummary"];
+        };
+        /** ArriveWindow */
+        ArriveWindow: {
+            /** From */
+            from: string;
+            /** To */
+            to: string;
         };
         /** CourtList */
         CourtList: {
@@ -224,6 +472,25 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HandleIn */
+        HandleIn: {
+            /** Applicationid */
+            applicationId: string;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "agree" | "reject";
+        };
+        /** HandleResult */
+        HandleResult: {
+            /**
+             * Applicationstatus
+             * @enum {string}
+             */
+            applicationStatus: "pending" | "agreed" | "rejected" | "cancelled";
+            request: components["schemas"]["MatchSummary"];
+        };
         /** HealthData */
         HealthData: {
             /** Status */
@@ -234,6 +501,128 @@ export interface components {
             /** Isnewuser */
             isNewUser: boolean;
             userInfo: components["schemas"]["Profile"];
+        };
+        /** MatchDetail */
+        MatchDetail: {
+            /** Id */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "matched" | "completed" | "cancelled";
+            /**
+             * Matchtype
+             * @enum {string}
+             */
+            matchType: "singles" | "doubles";
+            /** Slotsneeded */
+            slotsNeeded: number;
+            /** Filledcount */
+            filledCount: number;
+            /** Date */
+            date: string;
+            /** Timeslot */
+            timeSlot: string;
+            /** Startat */
+            startAt: string;
+            court: components["schemas"]["CourtOut"];
+            publisher: components["schemas"]["UserPublic"];
+            /** Expectedntrpmin */
+            expectedNtrpMin?: number | null;
+            /** Expectedntrpmax */
+            expectedNtrpMax?: number | null;
+            /**
+             * Genderpref
+             * @enum {string}
+             */
+            genderPref: "any" | "male" | "female";
+            /**
+             * Myrole
+             * @enum {string}
+             */
+            myRole: "publisher" | "partner" | "applicant" | "none";
+            /** Myapplicationstatus */
+            myApplicationStatus?: ("pending" | "agreed" | "rejected" | "cancelled") | null;
+            /** Myapplicationid */
+            myApplicationId?: string | null;
+            /** Availableactions */
+            availableActions?: string[];
+            /** Participants */
+            participants: components["schemas"]["ParticipantOut"][];
+            /** Pendingapplicationcount */
+            pendingApplicationCount?: number | null;
+            /** Myratings */
+            myRatings?: {
+                [key: string]: unknown;
+            }[];
+            /** Cancelreason */
+            cancelReason?: number | null;
+            /** Matchedtime */
+            matchedTime?: string | null;
+            /** Completedtime */
+            completedTime?: string | null;
+            arriveWindow: components["schemas"]["ArriveWindow"];
+        };
+        /** MatchSummary */
+        MatchSummary: {
+            /** Id */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "matched" | "completed" | "cancelled";
+            /**
+             * Matchtype
+             * @enum {string}
+             */
+            matchType: "singles" | "doubles";
+            /** Slotsneeded */
+            slotsNeeded: number;
+            /** Filledcount */
+            filledCount: number;
+            /** Date */
+            date: string;
+            /** Timeslot */
+            timeSlot: string;
+            /** Startat */
+            startAt: string;
+            court: components["schemas"]["CourtOut"];
+            publisher: components["schemas"]["UserBrief"];
+            /** Expectedntrpmin */
+            expectedNtrpMin?: number | null;
+            /** Expectedntrpmax */
+            expectedNtrpMax?: number | null;
+            /**
+             * Genderpref
+             * @enum {string}
+             */
+            genderPref: "any" | "male" | "female";
+            /**
+             * Myrole
+             * @enum {string}
+             */
+            myRole: "publisher" | "partner" | "applicant" | "none";
+            /** Myapplicationstatus */
+            myApplicationStatus?: ("pending" | "agreed" | "rejected" | "cancelled") | null;
+            /** Myapplicationid */
+            myApplicationId?: string | null;
+            /** Availableactions */
+            availableActions?: string[];
+        };
+        /** ParticipantOut */
+        ParticipantOut: {
+            user: components["schemas"]["UserBrief"];
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "publisher" | "partner";
+            /** Arrived */
+            arrived: boolean;
+            /** Rated */
+            rated: boolean;
         };
         /** Profile */
         Profile: {
@@ -310,6 +699,130 @@ export interface components {
             /** Bio */
             bio?: string | null;
         };
+        /** PublishIn */
+        PublishIn: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Timeslot */
+            timeSlot: string;
+            /** Courtid */
+            courtId: string;
+            /**
+             * Matchtype
+             * @enum {string}
+             */
+            matchType: "singles" | "doubles";
+            /** Slotsneeded */
+            slotsNeeded?: number | null;
+            /** Expectedntrpmin */
+            expectedNtrpMin?: number | null;
+            /** Expectedntrpmax */
+            expectedNtrpMax?: number | null;
+            /**
+             * Genderpref
+             * @default any
+             * @enum {string}
+             */
+            genderPref: "any" | "male" | "female";
+        };
+        /** RecommendItem */
+        RecommendItem: {
+            /** Id */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "matched" | "completed" | "cancelled";
+            /**
+             * Matchtype
+             * @enum {string}
+             */
+            matchType: "singles" | "doubles";
+            /** Slotsneeded */
+            slotsNeeded: number;
+            /** Filledcount */
+            filledCount: number;
+            /** Date */
+            date: string;
+            /** Timeslot */
+            timeSlot: string;
+            /** Startat */
+            startAt: string;
+            court: components["schemas"]["CourtOut"];
+            publisher: components["schemas"]["UserBrief"];
+            /** Expectedntrpmin */
+            expectedNtrpMin?: number | null;
+            /** Expectedntrpmax */
+            expectedNtrpMax?: number | null;
+            /**
+             * Genderpref
+             * @enum {string}
+             */
+            genderPref: "any" | "male" | "female";
+            /**
+             * Myrole
+             * @enum {string}
+             */
+            myRole: "publisher" | "partner" | "applicant" | "none";
+            /** Myapplicationstatus */
+            myApplicationStatus?: ("pending" | "agreed" | "rejected" | "cancelled") | null;
+            /** Myapplicationid */
+            myApplicationId?: string | null;
+            /** Availableactions */
+            availableActions?: string[];
+            /** Rulescore */
+            ruleScore: number;
+            /** Llmscore */
+            llmScore?: number | null;
+            /** Finalscore */
+            finalScore?: number | null;
+            /** Matchreason */
+            matchReason?: string | null;
+        };
+        /** RecommendPage */
+        RecommendPage: {
+            /** List */
+            list: components["schemas"]["RecommendItem"][];
+            /** Page */
+            page: number;
+            /** Pagesize */
+            pageSize: number;
+            /** Total */
+            total: number;
+            /** Hasmore */
+            hasMore: boolean;
+            /** Llmapplied */
+            llmApplied: boolean;
+        };
+        /** UserBrief */
+        UserBrief: {
+            /** Id */
+            id: string;
+            /** Nickname */
+            nickname?: string | null;
+            /** Avatar */
+            avatar?: string | null;
+            /** Ntrp */
+            ntrp?: number | null;
+            /** Gender */
+            gender?: string | null;
+            /**
+             * Creditscore
+             * @default 0
+             */
+            creditScore: number;
+            /** Avgrating */
+            avgRating?: number | null;
+            /**
+             * Ratingcount
+             * @default 0
+             */
+            ratingCount: number;
+        };
         /** UserPublic */
         UserPublic: {
             /** Id */
@@ -355,6 +868,19 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WithdrawIn */
+        WithdrawIn: {
+            /** Applicationid */
+            applicationId: string;
+        };
+        /** WithdrawResult */
+        WithdrawResult: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "agreed" | "rejected" | "cancelled";
         };
     };
     responses: never;
@@ -580,6 +1106,240 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_CourtList_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_api_v1_match_publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_MatchDetail_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recommend_api_v1_match_recommend_get: {
+        parameters: {
+            query: {
+                city: string;
+                ntrpMin?: number | null;
+                ntrpMax?: number | null;
+                gender?: ("male" | "female") | null;
+                date?: string | null;
+                timeSlot?: string | null;
+                courtId?: string | null;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_RecommendPage_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_api_v1_match_detail__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_MatchDetail_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_api_v1_match_apply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ApplyResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    withdraw_api_v1_match_application_withdraw_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WithdrawIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_WithdrawResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    applications_api_v1_match_applications_get: {
+        parameters: {
+            query: {
+                requestId: string;
+                status?: ("pending" | "agreed" | "rejected" | "cancelled") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ApplicationList_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    handle_api_v1_match_handle_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HandleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_HandleResult_"];
                 };
             };
             /** @description Validation Error */
