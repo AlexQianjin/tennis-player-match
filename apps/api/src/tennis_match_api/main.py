@@ -44,6 +44,11 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         from tennis_match_api.services.scheduler import stop_scheduler
 
         await stop_scheduler()
+    from tennis_match_api.services.llm.client import close_llm_client
+    from tennis_match_api.services.llm.scoring import cancel_background
+
+    await cancel_background()
+    await close_llm_client()
     await dispose_engine()
 
 
@@ -56,6 +61,10 @@ def create_app() -> FastAPI:
     app.include_router(user_router)
     app.include_router(court_router)
     app.include_router(match_router)
+    if settings.llm_debug_api_enabled:
+        from tennis_match_api.routers.llm_debug import router as llm_router
+
+        app.include_router(llm_router)
 
     @app.middleware("http")
     async def request_context(request: Request, call_next):  # type: ignore[no-untyped-def]

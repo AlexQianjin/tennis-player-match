@@ -83,7 +83,8 @@ The mini program dev server writes `apps/miniapp/dist/wx`. Import that directory
 - `GET /healthz`, `GET /api/v1/health`, `GET /api/v1/health/db`
 - `POST /api/v1/auth/login` (upsert, `isNewUser`, disabled users return 403)
 - `GET/POST/PATCH /api/v1/user/profile` and `GET /api/v1/user/{userId}/public`
-- Rules-only matching, plus my-matches, cancel/leave, arrive, pairwise rating, credit counters, and the in-process scheduler. LLM ranking is still off.
+- Matching through recommend, apply, my-matches, cancel/leave, arrive, pairwise rating, credit, and the in-process scheduler
+- LLM re-ranking on the server when `LLM_ENABLED=true` and `AI_MODEL_BASE_URL`, `AI_MODEL_API_KEY`, and `AI_MODEL_NAME` are all set. Otherwise recommend stays on the rule order (`llmApplied=false`). The mini program never sees the key. See [Enabling LLM locally](#enabling-llm-locally).
 - Profile completion, NTRP monthly cooldown (`40301` + `nextEditableAt`), and avatar `fileID` checks (`40004`)
 - `GET /api/v1/courts?city=` (active courts only). Wuhan rows in the seed CSV are still `TODO` placeholders
 - Mini program launch login, onboarding (`mode=onboarding`), personal center, and a court picker on the publish tab
@@ -101,6 +102,19 @@ pnpm dev:weapp
 
 Open `apps/miniapp/dist/wx` in WeChat DevTools (`pnpm --filter @tennis/miniapp dev:weapp` writes that directory) and leave URL checking off. The http transport sends `X-Dev-Openid`. Choose-avatar upload is a fileID stub on that transport (`cloud://dev.local/avatars/...`) because cloud storage is not configured locally.
 
+## Enabling LLM locally
+
+Copy `apps/api/.env.example` to `apps/api/.env` (gitignored) and set:
+
+```sh
+LLM_ENABLED=true
+AI_MODEL_BASE_URL=https://your-openai-compatible-host/v1
+AI_MODEL_API_KEY=your-key
+AI_MODEL_NAME=your-model
+```
+
+Leave `LLM_DEBUG_API_ENABLED=false` unless you also set `INTERNAL_API_TOKEN` and want `POST /api/v1/llm/match/score` and `/batch-score`. Do not commit `.env`. CI keeps `LLM_ENABLED=false` and does not call a model. A missing key forces the rule-only path even if `LLM_ENABLED=true`.
+
 ## Next milestone
 
-LLM re-ranking (M4). A verified Wuhan court CSV is still a product-owner task. Cloud Hosting wiring stays environment-driven. The image job in CI builds `apps/api` only.
+M5 stays out of this branch: Cloud Run production wiring, content safety, and mini program review submission. A verified Wuhan court CSV is still a product-owner task. Cloud Hosting stays environment-driven. The image job in CI builds `apps/api` only.
