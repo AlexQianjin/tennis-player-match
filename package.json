@@ -1,0 +1,29 @@
+{
+  "name": "tennis-player-match",
+  "private": true,
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @tennis/api --filter @tennis/miniapp dev",
+    "dev:api": "pnpm --filter @tennis/api dev",
+    "dev:weapp": "pnpm --filter @tennis/miniapp dev:weapp",
+    "build": "pnpm -r --filter '!tennis-player-match' build",
+    "lint": "pnpm -r --filter '!tennis-player-match' lint",
+    "typecheck": "pnpm -r --filter '!tennis-player-match' typecheck",
+    "test": "pnpm -r --filter '!tennis-player-match' test",
+    "gen:api": "pnpm --filter @tennis/api openapi && pnpm --filter @tennis/shared gen",
+    "db:up": "docker compose up -d --wait mysql",
+    "db:down": "docker compose down",
+    "db:migrate": "pnpm --filter @tennis/api migrate",
+    "db:reset": "pnpm --filter @tennis/api db:reset",
+    "seed:courts": "pnpm --filter @tennis/api seed"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "prettier": "^3.6.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.2"
+  }
+}
