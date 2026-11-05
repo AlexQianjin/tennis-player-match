@@ -3,6 +3,7 @@ from tennis_match_api.models.court import Court
 from tennis_match_api.models.match import (
     Application,
     MatchParticipant,
+    MatchRating,
     MatchRequest,
     StateTransitionLog,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "Base",
     "Court",
     "MatchParticipant",
+    "MatchRating",
     "MatchRequest",
     "StateTransitionLog",
 ]

@@ -1,6 +1,7 @@
 import { useLaunch } from 'virtual:taro/api'
 import Taro from 'virtual:taro/api'
 import type { PropsWithChildren } from 'react'
+import { flushPendingRatings } from './services/offline-queue.ts'
 import { openOnboarding } from './services/onboarding.ts'
 import { useAuthStore } from './stores/auth.ts'
 import './app.css'
@@ -19,6 +20,7 @@ function App({ children }: PropsWithChildren) {
       }
       await useAuthStore.getState().bootstrap()
       openOnboarding()
+      await flushPendingRatings()
     })()
   })
 
