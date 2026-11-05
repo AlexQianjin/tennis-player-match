@@ -2226,11 +2226,11 @@ export async function request<T>(o: ReqOpts, attempt = 0): Promise<T> {
 
 ## 11. 种子数据计划（武汉球场）
 
-`apps/api/seed/courts_wuhan.csv` 现在是首批公开场馆（全民健身中心、汉江湾体育公园、五环体育中心、毛坦公园、汉口文体中心、光谷国际网球中心、好燃时刻智慧体育公园），不再含占位行。产品仍应在微信地图上逐条抽查名称与地址。坐标只在有 GCJ-02 来源时填写：目前只有汉江湾体育公园网球场（高德）写了经纬度，其余留空，不要把 WGS84/OSM 坐标换算后填入。
+`apps/api/seed/courts_wuhan.csv` 现在是首批公开场馆（全民健身中心、汉江湾体育公园、五环体育中心、毛坦公园、汉口文体中心、光谷国际网球中心、好燃时刻智慧体育公园、傲云网球馆光谷店），不再含占位行。产品仍应在微信地图上逐条抽查名称与地址。坐标只在有 GCJ-02 来源时填写：目前只有汉江湾体育公园网球场（高德）写了经纬度，其余留空，不要把 WGS84/OSM 坐标换算后填入。傲云网球馆光谷店不要和硚口区古田二路或汉阳店混淆。
 
 1. 数据文件：`apps/api/seed/courts_wuhan.csv`，列：`name,city,district,address,latitude,longitude,sort_order,is_active`（随镜像打包，便于在云上执行）。
 2. 当前文件可直接导入。若以后某行的名称、所在区或地址再次出现 `TODO`，导入脚本在 prod 环境拒绝该文件；dev/test 必须显式加上 `--allow-placeholder`。
-3. 后续采集（产品/运营）：在微信地图上核对这 7 个场馆，补上经过核对的 GCJ-02 坐标。不要在未核对时增补场馆。
+3. 后续采集（产品/运营）：在微信地图上核对这 8 个场馆，补上经过核对的 GCJ-02 坐标。不要在未核对时增补场馆。
 4. 导入：`pnpm seed:courts`（= 在 `apps/api` 中 `uv run tennis-match-seed --courts seed/courts_wuhan.csv`），按 `(city, name)` 查找后插入或更新（唯一键 `uq_court_city_active_name`），幂等。当前 CSV 不需要 `--allow-placeholder`。使用 migrator 账号执行（`tennis_app` 对 `court` 只读）。云上首次导入：控制台「数据库管理」以 root 执行脚本生成的 SQL（`--emit-sql` 输出），或临时设置 `SEED_COURTS_ON_START=true` 发布一次后改回【假设：二选一，M1 定】。
 5. 开发假数据：`apps/api/seed/dev_fixtures.py`（`tennis-match-seed --dev-fixtures`，`pnpm db:reset` 会调用）生成 `dev_user_1..10`（openid 前缀 `dev_`，昵称「测试用户N」，NTRP 2.5–4.5，多样的 style/bio，用于验证 LLM 打分）以及若干未来日期的单打/双打约球；脚本检查 `APP_ENV`，**禁止在 prod 执行**。
 

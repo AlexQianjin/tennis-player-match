@@ -113,9 +113,10 @@ def test_wuhan_court_csv_is_public_venues_without_placeholder_flag() -> None:
         "汉口文体中心网球场",
         "光谷国际网球中心",
         "好燃时刻智慧体育公园网球场",
+        "傲云网球馆(光谷店)",
     ]
     assert all(row["city"] == "武汉" for row in rows)
-    assert [int(row["sort_order"]) for row in rows] == [10, 20, 30, 40, 50, 60, 70]
+    assert [int(row["sort_order"]) for row in rows] == [10, 20, 30, 40, 50, 60, 70, 80]
     assert all(row["is_active"] == "true" for row in rows)
     assert "TODO" not in _CSV.read_text(encoding="utf-8")
     coords = [(row["latitude"], row["longitude"]) for row in rows]
