@@ -37,6 +37,7 @@ from tennis_match_api.services.lifecycle_service import (
     my_matches,
     rate_match,
 )
+from tennis_match_api.services.llm.client import LLMClient, get_llm_client
 from tennis_match_api.services.match_service import (
     apply_to_match,
     handle_application,
@@ -81,6 +82,7 @@ async def recommend(
     session: Annotated[AsyncSession, Depends(get_session)],
     settings: Annotated[Settings, Depends(get_settings)],
     clock: Annotated[Clock, Depends(get_clock)],
+    llm: Annotated[LLMClient | None, Depends(get_llm_client)],
     city: Annotated[str, Query()],
     ntrp_min: Annotated[float | None, Query(alias="ntrpMin")] = None,
     ntrp_max: Annotated[float | None, Query(alias="ntrpMax")] = None,
@@ -105,6 +107,7 @@ async def recommend(
         page_size=page_size,
         settings=settings,
         clock=clock,
+        llm=llm,
     )
     return ApiResponse(data=page_data)
 
@@ -153,10 +156,14 @@ async def withdraw(
 async def applications(
     user: Annotated[AppUser, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    clock: Annotated[Clock, Depends(get_clock)],
     request_id: Annotated[str, Query(alias="requestId")],
     status: Annotated[Literal["pending", "agreed", "rejected", "cancelled"] | None, Query()] = None,
 ) -> ApiResponse[ApplicationList]:
-    return ApiResponse(data=await list_applications(session, user, request_id, status))
+    return ApiResponse(
+        data=await list_applications(session, user, request_id, status, settings, clock)
+    )
 
 
 @router.post("/match/handle", response_model=ApiResponse[HandleResult])

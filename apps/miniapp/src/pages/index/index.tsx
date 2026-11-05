@@ -188,6 +188,9 @@ export default function IndexPage() {
                 {item.matchType === 'doubles' ? '双打' : '单打'} · 人数 {item.filledCount + 1}/
                 {item.slotsNeeded + 1}
               </Text>
+              {item.matchReason ? (
+                <Text className="mt-1 block text-xs text-emerald-800">{item.matchReason}</Text>
+              ) : null}
             </View>
           ))}
           {hasMore ? (

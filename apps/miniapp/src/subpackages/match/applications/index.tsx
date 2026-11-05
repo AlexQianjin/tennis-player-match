@@ -73,6 +73,9 @@ export default function ApplicationsPage() {
           {item.applicant.bio ? (
             <Text className="mt-2 block text-sm text-slate-600">{item.applicant.bio}</Text>
           ) : null}
+          {item.matchReason ? (
+            <Text className="mt-2 block text-xs text-emerald-800">{item.matchReason}</Text>
+          ) : null}
           {item.status === 'pending' ? (
             <View className="mt-3 flex flex-row gap-3">
               <Text className="text-sm text-emerald-800" onClick={() => void handle(item.applicationId, 'agree')}>

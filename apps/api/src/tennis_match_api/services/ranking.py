@@ -1,4 +1,4 @@
-"""Rule score used while LLM ranking is off (M4)."""
+"""Rule score and the LLM final score from DESIGN §9.2."""
 
 import math
 from decimal import Decimal
@@ -28,3 +28,33 @@ def rule_score(
     if total <= 0:
         return 0.0
     return (weight_credit * credit + weight_ntrp * closeness) / total
+
+
+def final_score(
+    credit: float,
+    closeness: float,
+    llm: int | None,
+    *,
+    weight_credit: float,
+    weight_ntrp: float,
+    weight_llm: float,
+) -> float | None:
+    """Weighted sum. None when this row has no LLM score."""
+    if llm is None:
+        return None
+    return weight_credit * credit + weight_ntrp * closeness + weight_llm * (llm / 100)
+
+
+def rerank_top[T](
+    rule_order: list[T],
+    finals: dict[int, float],
+    *,
+    top_n: int,
+    row_id,
+    row_start,
+) -> list[T]:
+    """Reorder the LLM shortlist by finalScore, then start time, then id."""
+    head = list(rule_order[:top_n])
+    tail = list(rule_order[top_n:])
+    head.sort(key=lambda row: (-finals[row_id(row)], row_start(row), row_id(row)))
+    return head + tail

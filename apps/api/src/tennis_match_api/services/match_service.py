@@ -38,8 +38,10 @@ from tennis_match_api.models import (
     MatchRequest,
 )
 from tennis_match_api.ntrp import parse_ntrp
+from tennis_match_api.services.llm.client import LLMClient
+from tennis_match_api.services.llm.scoring import annotate_recommend, cached_application_notes
 from tennis_match_api.services.profile_service import ensure_profile_completed, public_from_user
-from tennis_match_api.services.ranking import credit_norm, ntrp_closeness, rule_score
+from tennis_match_api.services.ranking import credit_norm, ntrp_closeness, rerank_top, rule_score
 from tennis_match_api.services.state_machine import (
     ConcurrencyConflict,
     available_actions,
@@ -423,6 +425,7 @@ async def recommend_matches(
     page_size: int,
     settings: Settings,
     clock: Clock,
+    llm: LLMClient | None = None,
 ) -> RecommendPage:
     ensure_profile_completed(user)
     if user.ntrp is None or user.gender is None:
@@ -480,26 +483,53 @@ async def recommend_matches(
     if court_pk is not None:
         stmt = stmt.where(MatchRequest.court_id == court_pk)
     rows = (await session.execute(stmt)).all()
-    scored: list[tuple[float, datetime, int, MatchRequest, AppUser, Court]] = []
+    scored: list[tuple[float, float, float, datetime, int, MatchRequest, AppUser, Court]] = []
     for request, publisher, court in rows:
-        if publisher.ntrp is None:
+        if publisher.ntrp is None or user.ntrp is None:
             continue
+        credit = credit_norm(int(publisher.credit_score or 0), settings.credit_norm_cap)
+        closeness = ntrp_closeness(publisher.ntrp, user.ntrp, hard)
         score = rule_score(
-            credit_norm(int(publisher.credit_score or 0), settings.credit_norm_cap),
-            ntrp_closeness(publisher.ntrp, user.ntrp, hard),
+            credit,
+            closeness,
             weight_credit=settings.rank_weight_credit,
             weight_ntrp=settings.rank_weight_ntrp,
         )
-        scored.append((score, request.start_at, int(request.id), request, publisher, court))
-    scored.sort(key=lambda item: (-item[0], item[1], item[2]))
+        scored.append(
+            (score, credit, closeness, request.start_at, int(request.id), request, publisher, court)
+        )
+    scored.sort(key=lambda item: (-item[0], item[3], item[4]))
+    marks, llm_applied = await annotate_recommend(
+        session,
+        user,
+        [(row[1], row[2], row[3], row[4], row[5], row[6]) for row in scored],
+        settings=settings,
+        clock=clock,
+        client=llm,
+        page=page,
+    )
+    if llm_applied:
+        finals = {
+            row[4]: marks[row[4]].final
+            for row in scored[: settings.llm_top_n]
+            if row[4] in marks and marks[row[4]].final is not None
+        }
+        if len(finals) == min(len(scored), settings.llm_top_n):
+            scored = rerank_top(
+                scored,
+                finals,  # type: ignore[arg-type]
+                top_n=settings.llm_top_n,
+                row_id=lambda row: row[4],
+                row_start=lambda row: row[3],
+            )
     total = len(scored)
     start = (page - 1) * page_size
     page_rows = scored[start : start + page_size]
-    ids = [row[2] for row in page_rows]
+    ids = [row[4] for row in page_rows]
     applications = await _applications_for(session, user.id, ids)
     participants = await _participant_roles(session, user.id, ids)
     items: list[RecommendItem] = []
-    for score, _, _, request, publisher, court in page_rows:
+    for score, _credit, _closeness, _start_at, request_id, request, publisher, court in page_rows:
         summary = _to_summary(
             request,
             publisher,
@@ -510,13 +540,18 @@ async def recommend_matches(
             clock.now(),
             settings,
         )
+        mark = marks.get(request_id)
         items.append(
             RecommendItem(
                 **summary.model_dump(),
                 rule_score=round(score, 4),
-                llm_score=None,
-                final_score=None,
-                match_reason=None,
+                llm_score=mark.score if llm_applied and mark is not None else None,
+                final_score=(
+                    None
+                    if not llm_applied or mark is None or mark.final is None
+                    else round(mark.final, 4)
+                ),
+                match_reason=None if mark is None else mark.reason,
             )
         )
     return RecommendPage(
@@ -525,7 +560,7 @@ async def recommend_matches(
         page_size=page_size,
         total=total,
         has_more=start + len(items) < total,
-        llm_applied=False,
+        llm_applied=llm_applied,
     )
 
 
@@ -534,6 +569,8 @@ async def list_applications(
     user: AppUser,
     request_id: str,
     status: str | None,
+    settings: Settings,
+    clock: Clock,
 ) -> ApplicationList:
     request = await _request(session, request_id)
     if request.publisher_id != user.id:
@@ -548,17 +585,27 @@ async def list_applications(
         code = {name: number for number, name in _APP_STATUS.items()}[status]
         stmt = stmt.where(Application.status == code)
     rows = (await session.execute(stmt)).all()
-    items = [
-        ApplicationItem(
-            application_id=str(application.id),
-            applicant=public_from_user(applicant),
-            status=_APP_STATUS[application.status],  # type: ignore[arg-type]
-            apply_time=format_shanghai(application.create_time),
-            llm_score=None,
-            match_reason=None,
+    notes = await cached_application_notes(
+        session,
+        user,
+        request,
+        [applicant for _application, applicant in rows],
+        settings=settings,
+        now=clock.now(),
+    )
+    items = []
+    for application, applicant in rows:
+        note = notes.get(int(applicant.id))
+        items.append(
+            ApplicationItem(
+                application_id=str(application.id),
+                applicant=public_from_user(applicant),
+                status=_APP_STATUS[application.status],  # type: ignore[arg-type]
+                apply_time=format_shanghai(application.create_time),
+                llm_score=None if note is None else note[0],
+                match_reason=None if note is None else note[1],
+            )
         )
-        for application, applicant in rows
-    ]
     return ApplicationList(items=items)
 
 
