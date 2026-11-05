@@ -36,6 +36,8 @@ class AppUser(Base):
             persisted=True,
         ),
     )
+    # First NTRP assignment leaves this NULL so a new player can correct it once.
+    ntrp_update_time: Mapped[datetime | None] = mapped_column()
     profile_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     last_login_time: Mapped[datetime | None] = mapped_column()
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)

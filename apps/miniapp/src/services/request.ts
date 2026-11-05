@@ -4,11 +4,11 @@ import { NetworkError, RETRY_DELAYS_MS, shouldRetry, unwrap } from './envelope.t
 
 export interface RequestOptions {
   url: string
-  method?: 'GET' | 'POST'
-  data?: Record<string, unknown>
+  method?: 'GET' | 'POST' | 'PATCH'
+  data?: object
 }
 
-const DEV_OPENID_KEY = 'devOpenid'
+export const DEV_OPENID_KEY = 'devOpenid'
 let warmedUp = false
 
 function requestId(): string {

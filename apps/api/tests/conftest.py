@@ -15,13 +15,26 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from tennis_match_api.config import get_settings
+from tennis_match_api.db import dispose_engine
 from tennis_match_api.main import create_app
 
 
+@pytest.fixture(autouse=True)
+async def _dispose_db_engine():
+    # The engine is process-global and bound to the event loop that created it.
+    # Each test gets a new loop, so drop the pool before the next test.
+    yield
+    await dispose_engine()
+
+
 @pytest.fixture
-async def client():
+def app():
     get_settings.cache_clear()
-    app = create_app()
+    return create_app()
+
+
+@pytest.fixture
+async def client(app):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as http:
         yield http

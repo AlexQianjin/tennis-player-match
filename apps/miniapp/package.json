@@ -12,7 +12,7 @@
     "build": "pnpm build:weapp:test",
     "lint": "eslint src vite.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test src/services/envelope.test.ts"
+    "test": "node --experimental-strip-types --test src/services/envelope.test.ts src/services/errors.test.ts"
   },
   "dependencies": {
     "@tennis/shared": "workspace:*",

@@ -72,6 +72,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/user/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Profile */
+        get: operations["read_profile_api_v1_user_profile_get"];
+        put?: never;
+        /** Write Profile */
+        post: operations["write_profile_api_v1_user_profile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Write Profile */
+        patch: operations["write_profile_api_v1_user_profile_patch"];
+        trace?: never;
+    };
+    "/api/v1/user/{user_id}/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Public Profile */
+        get: operations["read_public_profile_api_v1_user__user_id__public_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/courts": {
         parameters: {
             query?: never;
@@ -134,6 +170,34 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["LoginResult"] | null;
+        };
+        /** ApiResponse[Profile] */
+        ApiResponse_Profile_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["Profile"] | null;
+        };
+        /** ApiResponse[UserPublic] */
+        ApiResponse_UserPublic_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Message
+             * @default success
+             */
+            message: string;
+            data?: components["schemas"]["UserPublic"] | null;
         };
         /** CourtList */
         CourtList: {
@@ -220,8 +284,64 @@ export interface components {
             profileCompleted: boolean;
             /** Missingfields */
             missingFields?: string[];
+            /** Ntrpupdatetime */
+            ntrpUpdateTime?: string | null;
+            /** Ntrpnexteditableat */
+            ntrpNextEditableAt?: string | null;
             /** Activerequestid */
             activeRequestId?: string | null;
+        };
+        /** ProfileUpdate */
+        ProfileUpdate: {
+            /** Nickname */
+            nickname?: string | null;
+            /** Avatar */
+            avatar?: string | null;
+            /** Ntrp */
+            ntrp?: number | null;
+            /** Gender */
+            gender?: ("male" | "female") | null;
+            /** Age */
+            age?: number | null;
+            /** City */
+            city?: string | null;
+            /** Style */
+            style?: ("singles" | "doubles" | "casual" | "competitive")[] | null;
+            /** Bio */
+            bio?: string | null;
+        };
+        /** UserPublic */
+        UserPublic: {
+            /** Id */
+            id: string;
+            /** Nickname */
+            nickname?: string | null;
+            /** Avatar */
+            avatar?: string | null;
+            /** Ntrp */
+            ntrp?: number | null;
+            /** Gender */
+            gender?: string | null;
+            /**
+             * Creditscore
+             * @default 0
+             */
+            creditScore: number;
+            /** Avgrating */
+            avgRating?: number | null;
+            /**
+             * Ratingcount
+             * @default 0
+             */
+            ratingCount: number;
+            /** Age */
+            age?: number | null;
+            /** City */
+            city?: string | null;
+            /** Style */
+            style?: string[];
+            /** Bio */
+            bio?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -321,6 +441,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_LoginResult_"];
+                };
+            };
+        };
+    };
+    read_profile_api_v1_user_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Profile_"];
+                };
+            };
+        };
+    };
+    write_profile_api_v1_user_profile_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Profile_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_profile_api_v1_user_profile_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Profile_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_public_profile_api_v1_user__user_id__public_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_UserPublic_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

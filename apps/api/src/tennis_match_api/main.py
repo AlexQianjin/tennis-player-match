@@ -17,6 +17,7 @@ from tennis_match_api.logging_setup import configure_logging
 from tennis_match_api.routers.auth import router as auth_router
 from tennis_match_api.routers.court import router as court_router
 from tennis_match_api.routers.health import router as health_router
+from tennis_match_api.routers.user import router as user_router
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title="tennis-match-api", version="0.1.0", lifespan=lifespan)
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(user_router)
     app.include_router(court_router)
 
     @app.middleware("http")
@@ -74,7 +76,11 @@ def create_app() -> FastAPI:
     async def validation_error(_request: Request, exc: RequestValidationError) -> JSONResponse:
         return JSONResponse(
             status_code=400,
-            content={"code": 400, "message": "参数错误", "data": {"errors": exc.errors()}},
+            content={
+                "code": 400,
+                "message": "参数错误",
+                "data": {"errors": _jsonable(exc.errors())},
+            },
         )
 
     @app.exception_handler(StarletteHTTPException)
@@ -94,6 +100,18 @@ def create_app() -> FastAPI:
         )
 
     return app
+
+
+def _jsonable(value: object) -> object:
+    if isinstance(value, BaseException):
+        return str(value)
+    if isinstance(value, dict):
+        return {str(key): _jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(item) for item in value]
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
 
 
 def main() -> None:
