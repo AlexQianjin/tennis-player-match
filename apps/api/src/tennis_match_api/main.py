@@ -27,12 +27,8 @@ log = logging.getLogger(__name__)
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     log.info(
-        "startup",
-        extra={
-            "event": "startup",
-            "auth_mode": settings.auth_mode,
-            "message": "confirm public network access is disabled before trusting X-WX-OPENID",
-        },
+        "confirm public network access is disabled before trusting X-WX-OPENID",
+        extra={"event": "startup", "auth_mode": settings.auth_mode},
     )
     if settings.scheduler_enabled:
         from tennis_match_api.services.scheduler import start_scheduler, startup_catchup

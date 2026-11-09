@@ -23,7 +23,9 @@ export default function SettingsPage() {
     <View className="min-h-screen bg-slate-50 px-6 py-8">
       <Text className="block text-2xl font-bold text-emerald-800">设置</Text>
       <Text className="mt-3 block text-sm leading-6 text-slate-600">
-        关于网球约球。清除本地缓存不会更换微信账号；身份仍是当前登录用户。
+        {httpTransport
+          ? '本地联调用下面的测试账号区分用户。清除缓存会保留当前测试账号，并重新登录。'
+          : '清除本地缓存不会更换微信账号；身份仍是当前登录用户。'}
       </Text>
       {profile ? (
         <Text className="mt-3 block text-xs text-slate-500">当前用户 {profile.id}</Text>
@@ -61,12 +63,23 @@ export default function SettingsPage() {
       <View
         className="mt-4 rounded-2xl bg-white px-4 py-3"
         onClick={() => {
+          let preserved = ''
+          if (httpTransport) {
+            try {
+              const stored = Taro.getStorageSync(DEV_OPENID_KEY) as unknown
+              if (typeof stored === 'string') preserved = stored.trim()
+            } catch {
+              preserved = ''
+            }
+          }
           useAuthStore.getState().clearLocal()
           try {
             Taro.clearStorageSync()
+            if (preserved) Taro.setStorageSync(DEV_OPENID_KEY, preserved)
           } catch {
             // Ignore storage failures.
           }
+          void useAuthStore.getState().bootstrap()
           void Taro.showToast({ title: '已清除本地缓存', icon: 'none' })
         }}
       >

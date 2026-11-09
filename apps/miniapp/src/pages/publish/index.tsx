@@ -77,6 +77,7 @@ export default function PublishPage() {
             : {}),
         },
       })
+      await useAuthStore.getState().refreshProfile().catch(() => undefined)
       await Taro.showToast({ title: '已发布', icon: 'none' })
       await Taro.switchTab({ url: '/pages/index/index' })
     } catch (error) {
@@ -90,6 +91,11 @@ export default function PublishPage() {
     <View className="min-h-screen bg-slate-50 px-6 py-8">
       <Text className="block text-2xl font-bold text-emerald-800">发布约球</Text>
       <ProfileGate action="发布约球" />
+      {profile?.activeRequestId ? (
+        <Text className="mt-3 block text-sm leading-6 text-amber-800">
+          您已有一个进行中的约球，请先完成或取消
+        </Text>
+      ) : null}
       {hint ? <Text className="mt-4 block text-sm text-slate-500">{hint}</Text> : null}
       {labels.length > 0 ? (
         <Picker

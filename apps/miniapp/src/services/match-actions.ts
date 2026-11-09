@@ -1,7 +1,8 @@
 import Taro from 'virtual:taro/api'
+import { useAuthStore } from '../stores/auth.ts'
 import { request } from './request.ts'
 
-interface CancelPreview {
+export interface CancelPreview {
   cancelCounted: boolean
   effect: 'reopen' | 'cancel_all' | 'leave'
 }
@@ -20,9 +21,19 @@ export async function confirmAndCancel(requestId: string): Promise<boolean> {
   const modal = await Taro.showModal({ title: '确认取消', content: `${counted}${effect}`, confirmText: '确认' })
   if (!modal.confirm) return false
   await request({ url: '/match/cancel', method: 'POST', data: { requestId } })
+  await refreshActiveRequest()
   return true
 }
 
 export async function markArrived(requestId: string): Promise<void> {
   await request({ url: '/match/arrive', method: 'POST', data: { requestId } })
+  await refreshActiveRequest()
+}
+
+async function refreshActiveRequest(): Promise<void> {
+  try {
+    await useAuthStore.getState().refreshProfile()
+  } catch {
+    // The write already succeeded. The next page show refreshes the profile.
+  }
 }

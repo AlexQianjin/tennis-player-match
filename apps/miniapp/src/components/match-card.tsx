@@ -1,6 +1,7 @@
 import { Text, View } from 'virtual:taro/components'
 import Taro from 'virtual:taro/api'
 import { presentError } from '../services/feedback.ts'
+import { matchStatusLabel } from '../services/labels.ts'
 import { confirmAndCancel, markArrived } from '../services/match-actions.ts'
 import { request } from '../services/request.ts'
 import type { MatchSummary } from '../stores/recommend.ts'
@@ -14,7 +15,13 @@ const ACTION_LABEL: Record<string, string> = {
   rate: '评分',
 }
 
-export function MatchCard({ item, onChanged }: { item: MatchSummary; onChanged?: () => void }) {
+export function MatchCard({
+  item,
+  onChanged,
+}: {
+  item: MatchSummary & { pendingApplicationCount?: number | null }
+  onChanged?: () => void
+}) {
   async function run(action: string): Promise<void> {
     try {
       if (action === 'cancel') {
@@ -55,7 +62,8 @@ export function MatchCard({ item, onChanged }: { item: MatchSummary; onChanged?:
           {item.court.name} · {item.date} {item.timeSlot}
         </Text>
         <Text className="mt-1 block text-xs text-slate-500">
-          人数 {item.filledCount + 1}/{item.slotsNeeded + 1}
+          人数 {item.filledCount + 1}/{item.slotsNeeded + 1} · {matchStatusLabel(item.status)}
+          {item.pendingApplicationCount ? ` · 待处理申请 ${item.pendingApplicationCount}` : ''}
         </Text>
       </View>
       <View className="mt-2 flex flex-row flex-wrap gap-3">

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { ApiError, shouldRetry, unwrap } from './envelope.ts'
+import { ApiError, coerceEnvelope, shouldRetry, unwrap } from './envelope.ts'
 
 describe('unwrap', () => {
   it('returns data when code is 0', () => {
@@ -12,6 +12,18 @@ describe('unwrap', () => {
       () => unwrap({ code: 401, message: '缺少或不可信的微信身份', data: null }),
       (error: unknown) => error instanceof ApiError && error.code === 401,
     )
+  })
+})
+
+describe('coerceEnvelope', () => {
+  it('parses a string body the way some runtimes return JSON', () => {
+    const body = coerceEnvelope<{ ok: boolean }>('{"code":0,"message":"success","data":{"ok":true}}')
+    assert.deepEqual(unwrap(body), { ok: true })
+  })
+
+  it('rejects a non-envelope payload', () => {
+    assert.throws(() => coerceEnvelope('not-json'), (error: unknown) => error instanceof ApiError)
+    assert.throws(() => coerceEnvelope({ message: 'missing code' }), (error: unknown) => error instanceof ApiError)
   })
 })
 

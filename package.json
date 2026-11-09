@@ -9,6 +9,7 @@
     "dev": "pnpm --parallel --filter @tennis/api --filter @tennis/miniapp dev",
     "dev:api": "pnpm --filter @tennis/api dev",
     "dev:weapp": "pnpm --filter @tennis/miniapp dev:weapp",
+    "dev:integration": "bash scripts/dev-integration.sh",
     "build": "pnpm -r --filter '!tennis-player-match' build",
     "lint": "pnpm -r --filter '!tennis-player-match' lint",
     "typecheck": "pnpm -r --filter '!tennis-player-match' typecheck",

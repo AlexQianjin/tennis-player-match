@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { messageFor } from '../services/errors.ts'
 import { request } from '../services/request.ts'
 
 export interface MatchPublisher {
@@ -55,7 +56,7 @@ export interface RecommendFilters {
   courtId?: string
 }
 
-interface RecommendPage {
+export interface RecommendPage {
   list: RecommendItem[]
   page: number
   pageSize: number
@@ -115,7 +116,7 @@ export const useRecommendStore = create<RecommendState>((set, get) => ({
         loading: false,
       })
     } catch (error) {
-      set({ loading: false, error: error instanceof Error ? error.message : '加载失败' })
+      set({ loading: false, error: messageFor(error) })
       throw error
     }
   },

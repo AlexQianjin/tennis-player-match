@@ -67,6 +67,7 @@ Local API auth is `AUTH_MODE=dev`. The mini program sends `X-Dev-Openid` (storag
 pnpm dev            # API on :8000 and the weapp dev server
 pnpm dev:api
 pnpm dev:weapp      # Vite dev, .env.development, http transport
+pnpm dev:integration # MySQL, migrate, seed, dev-mode weapp build, API on :8000
 pnpm --filter @tennis/miniapp dev:weapp:cloud   # .env.test, callContainer
 pnpm --filter @tennis/miniapp build:weapp:test
 pnpm lint && pnpm typecheck && pnpm test
@@ -114,6 +115,8 @@ AI_MODEL_NAME=your-model
 ```
 
 Leave `LLM_DEBUG_API_ENABLED=false` unless you also set `INTERNAL_API_TOKEN` and want `POST /api/v1/llm/match/score` and `/batch-score`. Do not commit `.env`. CI keeps `LLM_ENABLED=false` and does not call a model. A missing key forces the rule-only path even if `LLM_ENABLED=true`.
+
+Local integration with WeChat DevTools (disable URL check, switch `X-Dev-Openid`) is in [docs/runbook.md](docs/runbook.md) section 8.
 
 ## Next milestone
 

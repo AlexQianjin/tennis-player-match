@@ -1,6 +1,7 @@
 import { Text, View } from 'virtual:taro/components'
 import { useDidShow, useLoad } from 'virtual:taro/api'
 import { useState } from 'react'
+import { messageFor } from '../../../services/errors.ts'
 import { presentError } from '../../../services/feedback.ts'
 import { request } from '../../../services/request.ts'
 import type { MatchSummary } from '../../../stores/recommend.ts'
@@ -25,23 +26,33 @@ export default function ApplicationsPage() {
   const [requestId, setRequestId] = useState('')
   const [items, setItems] = useState<ApplicationItem[]>([])
   const [busyId, setBusyId] = useState('')
+  const [failed, setFailed] = useState('')
 
   async function load(id: string): Promise<void> {
     const data = await request<{ list: ApplicationItem[] }>({
       url: `/match/applications?requestId=${id}`,
     })
     setItems(data.list)
+    setFailed('')
   }
 
   useLoad((query) => {
     const id = typeof query.requestId === 'string' ? query.requestId : ''
     setRequestId(id)
-    if (id) void load(id).catch((error: unknown) => presentError(error))
+    if (id) {
+      void load(id).catch(async (error: unknown) => {
+        setFailed(messageFor(error))
+        await presentError(error)
+      })
+    }
   })
 
   useDidShow(() => {
     if (!requestId) return
-    void load(requestId).catch((error: unknown) => presentError(error))
+    void load(requestId).catch(async (error: unknown) => {
+      setFailed(messageFor(error))
+      await presentError(error)
+    })
   })
 
   async function handle(applicationId: string, action: 'agree' | 'reject'): Promise<void> {
@@ -59,7 +70,8 @@ export default function ApplicationsPage() {
   return (
     <View className="min-h-screen bg-slate-50 px-6 py-8">
       <Text className="block text-2xl font-bold text-emerald-800">申请列表</Text>
-      {items.length === 0 ? (
+      {failed ? <Text className="mt-4 block text-sm text-rose-700">{failed}</Text> : null}
+      {!failed && items.length === 0 ? (
         <Text className="mt-4 block text-sm text-slate-500">还没有申请</Text>
       ) : null}
       {items.map((item) => (

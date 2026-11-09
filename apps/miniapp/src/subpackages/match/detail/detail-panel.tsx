@@ -1,7 +1,9 @@
 import { Text, View } from 'virtual:taro/components'
 import Taro, { useDidShow } from 'virtual:taro/api'
 import { useState } from 'react'
+import { messageFor } from '../../../services/errors.ts'
 import { presentError } from '../../../services/feedback.ts'
+import { genderPrefLabel, matchStatusLabel, styleLabel } from '../../../services/labels.ts'
 import { confirmAndCancel, markArrived } from '../../../services/match-actions.ts'
 import { request } from '../../../services/request.ts'
 import type { MatchSummary } from '../../../stores/recommend.ts'
@@ -36,14 +38,19 @@ const ACTION_LABEL: Record<string, string> = {
 export default function DetailPanel({ requestId }: { requestId: string }) {
   const [detail, setDetail] = useState<MatchDetail | null>(null)
   const [busy, setBusy] = useState(false)
+  const [failed, setFailed] = useState('')
 
   async function load(): Promise<void> {
     const data = await request<MatchDetail>({ url: `/match/detail/${requestId}` })
     setDetail(data)
+    setFailed('')
   }
 
   useDidShow(() => {
-    void load().catch((error: unknown) => presentError(error))
+    void load().catch(async (error: unknown) => {
+      setFailed(messageFor(error))
+      await presentError(error)
+    })
   })
 
   async function run(action: string): Promise<void> {
@@ -80,8 +87,13 @@ export default function DetailPanel({ requestId }: { requestId: string }) {
   }
 
   if (!detail) {
-    return <Text className="mt-4 block text-sm text-slate-500">加载中…</Text>
+    return <Text className="mt-4 block text-sm text-slate-500">{failed || '加载中…'}</Text>
   }
+
+  const rating =
+    detail.publisher.avgRating == null
+      ? '暂无评分'
+      : `${detail.publisher.avgRating.toFixed(1)}（${detail.publisher.ratingCount}次）`
 
   const buttons = detail.availableActions.filter((action) => action in ACTION_LABEL)
 
@@ -92,9 +104,16 @@ export default function DetailPanel({ requestId }: { requestId: string }) {
           {detail.publisher.nickname || '球友'} · NTRP {detail.publisher.ntrp ?? '--'}
         </Text>
         <Text className="mt-1 block text-xs text-slate-500">
-          信用分 {detail.publisher.creditScore}
-          {detail.publisher.bio ? ` · ${detail.publisher.bio}` : ''}
+          信用分 {detail.publisher.creditScore} · 平均评分 {rating}
         </Text>
+        {detail.publisher.style?.length ? (
+          <Text className="mt-1 block text-xs text-slate-500">
+            风格 {detail.publisher.style.map((item) => styleLabel(item)).join(' / ')}
+          </Text>
+        ) : null}
+        {detail.publisher.bio ? (
+          <Text className="mt-2 block text-sm leading-6 text-slate-600">{detail.publisher.bio}</Text>
+        ) : null}
         <Text className="mt-3 block text-sm text-slate-800">
           {detail.court.name} {detail.court.address}
         </Text>
@@ -102,8 +121,11 @@ export default function DetailPanel({ requestId }: { requestId: string }) {
           {detail.date} {detail.timeSlot} · {detail.matchType === 'doubles' ? '双打' : '单打'}
         </Text>
         <Text className="mt-1 block text-sm text-slate-700">
-          人数 {detail.filledCount + 1}/{detail.slotsNeeded + 1} ·{' '}
-          {detail.status === 'matched' ? '已匹配' : detail.status === 'pending' ? '待匹配' : detail.status}
+          人数 {detail.filledCount + 1}/{detail.slotsNeeded + 1} · {matchStatusLabel(detail.status)}
+        </Text>
+        <Text className="mt-1 block text-xs text-slate-500">
+          期望等级 {detail.expectedNtrpMin ?? '不限'} - {detail.expectedNtrpMax ?? '不限'} · 性别
+          {genderPrefLabel(detail.genderPref)}
         </Text>
         {detail.pendingApplicationCount != null ? (
           <Text className="mt-1 block text-xs text-slate-500">
@@ -116,7 +138,7 @@ export default function DetailPanel({ requestId }: { requestId: string }) {
         {detail.participants.map((person) => (
           <Text key={person.user.id} className="mt-2 block text-sm text-slate-700">
             {person.role === 'publisher' ? '发布者' : '搭档'} · {person.user.nickname || '球友'} · NTRP{' '}
-            {person.user.ntrp ?? '--'}
+            {person.user.ntrp ?? '--'} · {person.arrived ? '已到场' : '未到场'}
           </Text>
         ))}
       </View>
