@@ -2,7 +2,7 @@
   "miniprogramRoot": "dist/wx/",
   "projectname": "tennis-miniapp",
   "description": "网球约球 — open dist/wx after a weapp build. AppID is a placeholder.",
-  "appid": "touristappid",
+  "appid": "wx770717211c04ec63",
   "setting": {
     "urlCheck": false,
     "es6": false,
@@ -10,7 +10,29 @@
     "postcss": false,
     "minified": false,
     "compileHotReLoad": true,
-    "skylineRenderEnable": false
+    "skylineRenderEnable": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
-  "compileType": "miniprogram"
+  "compileType": "miniprogram",
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {}
 }
