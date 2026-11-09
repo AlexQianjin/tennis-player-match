@@ -1,13 +1,18 @@
-"""Prompt v1 and the cache input hash."""
+"""Prompt v2 and the cache input hash.
+
+v2 adds the match date and clock window. Time overlap stays a recommend filter;
+the model only sees the window as soft context.
+"""
 
 import hashlib
 import json
+from datetime import date
 from decimal import Decimal
 
 from tennis_match_api.models import AppUser, MatchRequest
 from tennis_match_api.services.profile_service import mask_to_styles
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 SYSTEM_PROMPT = (
     "你是网球约球匹配助手。你只根据提供的资料，判断双方是否适合一起打这场球，"
     "重点考虑打球风格、个人简介中的偏好与期望是否匹配。"
@@ -34,6 +39,8 @@ def input_hash(
         "publisher": _person(publisher),
         "match": {
             "matchType": _TYPE.get(request.match_type, str(request.match_type)),
+            "date": _date_text(request),
+            "timeSlot": _slot_text(request),
             "expectedNtrpMin": _num(request.expected_ntrp_min),
             "expectedNtrpMax": _num(request.expected_ntrp_max),
             "genderPref": _PREF.get(request.gender_pref, "不限"),
@@ -54,7 +61,7 @@ def recommend_prompt(viewer: AppUser, rows: list[tuple[str, AppUser, MatchReques
     for short_id, publisher, request in rows:
         lines.append(
             f"- id={short_id}；类型：{_TYPE.get(request.match_type, '约球')}；"
-            f"{_person_line(publisher)}；期望对手等级：{_range(request)}；"
+            f"时间：{_when(request)}；{_person_line(publisher)}；期望对手等级：{_range(request)}；"
             f"性别偏好：{_PREF.get(request.gender_pref, '不限')}"
         )
     lines.append(
@@ -82,6 +89,27 @@ def _person_line(user: AppUser) -> str:
     age = user.age if user.age is not None else "未知"
     ntrp = _num(user.ntrp) or "未知"
     return f"NTRP：{ntrp}；性别：{gender}；年龄：{age}；打球风格：{styles}；简介：<<<{bio}>>>"
+
+
+def _when(request: MatchRequest) -> str:
+    slot = _slot_text(request)
+    day = _date_text(request)
+    if not slot or "-" not in slot:
+        return day or "未填写"
+    start, end = slot.split("-", 1)
+    label = f"{start}-次日{end}" if end <= start else slot
+    text = f"{day} {label}".strip()
+    return text or "未填写"
+
+
+def _slot_text(request: MatchRequest) -> str | None:
+    slot = request.__dict__.get("time_slot")
+    return slot if isinstance(slot, str) else None
+
+
+def _date_text(request: MatchRequest) -> str | None:
+    match_date = request.__dict__.get("match_date")
+    return match_date.isoformat() if isinstance(match_date, date) else None
 
 
 def _range(request: MatchRequest) -> str:

@@ -152,7 +152,7 @@ NOT NULL
 time_slot
 VARCHAR(32)
 NOT NULL
-时段 如14:00-16:00
+时段 HH:MM-HH:MM。结束可以是次日（如 23:00-01:00）。真正参与过期、自动取消和筛选的是由该时段算出的 start_at / end_at
 player_count
 TINYINT
 NOT NULL

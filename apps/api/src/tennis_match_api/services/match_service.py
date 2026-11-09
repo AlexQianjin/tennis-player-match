@@ -3,12 +3,10 @@
 Cancel, leave, arrive, rate, and the scheduler stay in M3. LLM scores stay null.
 """
 
-import re
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
-from sqlalchemy import func, select, update
+from sqlalchemy import DateTime, and_, cast, func, literal_column, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,6 +36,7 @@ from tennis_match_api.models import (
     MatchRequest,
 )
 from tennis_match_api.ntrp import parse_ntrp
+from tennis_match_api.schedule import ScheduleRejected, filter_offsets, validate_booking
 from tennis_match_api.services.llm.client import LLMClient
 from tennis_match_api.services.llm.scoring import annotate_recommend, cached_application_notes
 from tennis_match_api.services.profile_service import ensure_profile_completed, public_from_user
@@ -50,8 +49,6 @@ from tennis_match_api.services.state_machine import (
 )
 from tennis_match_api.timefmt import format_shanghai
 
-_SHANGHAI = ZoneInfo("Asia/Shanghai")
-_SLOT = re.compile(r"^((?:[01]\d|2[0-3]):[0-5]\d)-((?:[01]\d|2[0-3]):[0-5]\d)$")
 _STATUS = {1: "pending", 2: "matched", 3: "completed", 4: "cancelled"}
 _APP_STATUS = {1: "pending", 2: "agreed", 3: "rejected", 4: "cancelled"}
 _TYPE = {1: "singles", 2: "doubles"}
@@ -80,7 +77,8 @@ async def publish_match(
     user: AppUser,
     *,
     match_date: date,
-    time_slot: str,
+    start_time: str,
+    end_time: str,
     court_id: str,
     match_type: str,
     slots_needed: int | None,
@@ -93,7 +91,7 @@ async def publish_match(
     ensure_profile_completed(user)
     if user.ntrp is None:
         raise BizError(40001, "资料未完善，请先完善资料")
-    start_at, end_at = _schedule(match_date, time_slot, clock.now())
+    start_at, end_at, time_slot = _booking(match_date, start_time, end_time, clock.now())
     slots = _slots(match_type, slots_needed)
     low, high = _narrow_expected(
         user.ntrp, expected_ntrp_min, expected_ntrp_max, settings.ntrp_hard_diff
@@ -479,7 +477,7 @@ async def recommend_matches(
     if match_date is not None:
         stmt = stmt.where(MatchRequest.match_date == match_date)
     if time_slot is not None:
-        stmt = stmt.where(MatchRequest.time_slot == time_slot)
+        stmt = stmt.where(_overlaps_window(time_slot))
     if court_pk is not None:
         stmt = stmt.where(MatchRequest.court_id == court_pk)
     rows = (await session.execute(stmt)).all()
@@ -684,6 +682,7 @@ def _to_summary(
         date=request.match_date.isoformat(),
         time_slot=request.time_slot,
         start_at=format_shanghai(request.start_at),
+        end_at=format_shanghai(request.end_at),
         court=_court_out(court),
         publisher=_brief(publisher),
         expected_ntrp_min=None
@@ -935,22 +934,34 @@ def _narrow_expected(
     return narrowed_low, narrowed_high
 
 
-def _schedule(match_date: date, time_slot: str, now: datetime) -> tuple[datetime, datetime]:
-    matched = _SLOT.fullmatch(time_slot)
-    if matched is None:
-        raise BizError(40002, "不能选择过去的日期")
-    start_clock = time.fromisoformat(matched.group(1))
-    end_clock = time.fromisoformat(matched.group(2))
-    start_local = datetime.combine(match_date, start_clock, tzinfo=_SHANGHAI)
-    end_local = datetime.combine(match_date, end_clock, tzinfo=_SHANGHAI)
-    if end_local <= start_local:
-        raise BizError(40002, "不能选择过去的日期")
-    start_at = start_local.astimezone(UTC).replace(tzinfo=None)
-    end_at = end_local.astimezone(UTC).replace(tzinfo=None)
-    today = now.replace(tzinfo=UTC).astimezone(_SHANGHAI).date()
-    if match_date < today or start_at <= now:
-        raise BizError(40002, "不能选择过去的日期")
-    return start_at, end_at
+def _booking(
+    match_date: date, start_time: str, end_time: str, now: datetime
+) -> tuple[datetime, datetime, str]:
+    try:
+        return validate_booking(match_date, start_time, end_time, now)
+    except ScheduleRejected as exc:
+        raise BizError(40002, exc.message) from exc
+
+
+def _overlaps_window(time_slot: str):
+    """Half-open overlap with the clock window on the start date and the next day.
+
+    The extra day lets a 23:00–01:00 request match a 00:30–02:00 filter. Touching
+    only at an endpoint does not count. Expire and the 24h auto-cancel still key
+    off ``start_at``, so a custom start does not wait for a 2-hour grid.
+    """
+    try:
+        start_min, end_min = filter_offsets(time_slot)
+    except ScheduleRejected as exc:
+        raise BizError(40002, exc.message) from exc
+    base = cast(MatchRequest.match_date, DateTime())
+    clauses = []
+    for day in (0, 1):
+        shift = day * 24 * 60
+        window_start = func.date_add(base, literal_column(f"INTERVAL {start_min + shift} MINUTE"))
+        window_end = func.date_add(base, literal_column(f"INTERVAL {end_min + shift} MINUTE"))
+        clauses.append(and_(MatchRequest.start_at < window_end, MatchRequest.end_at > window_start))
+    return or_(*clauses)
 
 
 async def _court_for_user(session: AsyncSession, raw_id: str, city: str) -> Court:

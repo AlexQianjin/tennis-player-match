@@ -1,10 +1,11 @@
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from tennis_match_api.models import AppUser, MatchRequest
 from tennis_match_api.services.llm.parser import parse_scores
-from tennis_match_api.services.llm.prompt import input_hash
+from tennis_match_api.services.llm.prompt import input_hash, recommend_prompt
 from tennis_match_api.services.ranking import final_score, rerank_top
 
 
@@ -61,6 +62,12 @@ def test_input_hash_tracks_profile_prompt_and_model() -> None:
         publisher, candidate, request, prompt_version="v2", model_name="other"
     )
     assert len({base, changed_bio, changed_model, changed_prompt}) == 4
+    request.time_slot = "23:00-01:00"
+    request.match_date = date(2026, 6, 4)
+    changed_time = input_hash(publisher, candidate, request, prompt_version="v1", model_name="m")
+    assert changed_time not in {base, changed_bio, changed_model, changed_prompt}
+    prompt = recommend_prompt(candidate, [("r1", publisher, request)])
+    assert "时间：2026-06-04 23:00-次日01:00" in prompt
 
 
 def test_final_score_weights_and_stable_rerank() -> None:

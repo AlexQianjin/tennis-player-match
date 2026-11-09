@@ -413,8 +413,10 @@
                   "type": "null"
                 }
               ],
+              "description": "HH:MM-HH:MM window. Keeps requests whose interval overlaps it.",
               "title": "Timeslot"
-            }
+            },
+            "description": "HH:MM-HH:MM window. Keeps requests whose interval overlaps it."
           },
           {
             "name": "courtId",
@@ -1820,6 +1822,10 @@
             "type": "string",
             "title": "Startat"
           },
+          "endAt": {
+            "type": "string",
+            "title": "Endat"
+          },
           "court": {
             "$ref": "#/components/schemas/CourtOut"
           },
@@ -1975,6 +1981,7 @@
           "date",
           "timeSlot",
           "startAt",
+          "endAt",
           "court",
           "publisher",
           "genderPref",
@@ -2027,6 +2034,10 @@
           "startAt": {
             "type": "string",
             "title": "Startat"
+          },
+          "endAt": {
+            "type": "string",
+            "title": "Endat"
           },
           "court": {
             "$ref": "#/components/schemas/CourtOut"
@@ -2121,6 +2132,7 @@
           "date",
           "timeSlot",
           "startAt",
+          "endAt",
           "court",
           "publisher",
           "genderPref",
@@ -2171,6 +2183,10 @@
           "startAt": {
             "type": "string",
             "title": "Startat"
+          },
+          "endAt": {
+            "type": "string",
+            "title": "Endat"
           },
           "court": {
             "$ref": "#/components/schemas/CourtOut"
@@ -2286,6 +2302,7 @@
           "date",
           "timeSlot",
           "startAt",
+          "endAt",
           "court",
           "publisher",
           "genderPref",
@@ -2650,9 +2667,15 @@
             "format": "date",
             "title": "Date"
           },
-          "timeSlot": {
+          "startTime": {
             "type": "string",
-            "title": "Timeslot"
+            "title": "Starttime",
+            "description": "HH:MM in Asia/Shanghai. Must be after now."
+          },
+          "endTime": {
+            "type": "string",
+            "title": "Endtime",
+            "description": "HH:MM in Asia/Shanghai. A clock that is not after startTime ends the next day."
           },
           "courtId": {
             "type": "string",
@@ -2713,7 +2736,8 @@
         "type": "object",
         "required": [
           "date",
-          "timeSlot",
+          "startTime",
+          "endTime",
           "courtId",
           "matchType"
         ],
@@ -2826,6 +2850,10 @@
           "startAt": {
             "type": "string",
             "title": "Startat"
+          },
+          "endAt": {
+            "type": "string",
+            "title": "Endat"
           },
           "court": {
             "$ref": "#/components/schemas/CourtOut"
@@ -2957,6 +2985,7 @@
           "date",
           "timeSlot",
           "startAt",
+          "endAt",
           "court",
           "publisher",
           "genderPref",

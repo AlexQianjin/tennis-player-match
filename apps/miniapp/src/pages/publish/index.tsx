@@ -1,11 +1,21 @@
 import { Picker, Text, View } from 'virtual:taro/components'
 import Taro, { useDidShow } from 'virtual:taro/api'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ProfileGate } from '../../components/profile-gate.tsx'
 import { presentError } from '../../services/feedback.ts'
 import { requireCompleteProfile } from '../../services/onboarding.ts'
 import { request } from '../../services/request.ts'
-import { TIME_SLOTS, upcomingDates } from '../../services/schedule.ts'
+import {
+  DATE_WINDOW_DAYS,
+  addDays,
+  applyDate,
+  applyStart,
+  defaultSchedule,
+  formatDuration,
+  repairIfPast,
+  scheduleError,
+  shanghaiToday,
+} from '../../services/schedule.ts'
 import { useAuthStore } from '../../stores/auth.ts'
 import { useCourtStore, type Court } from '../../stores/court.ts'
 
@@ -22,18 +32,32 @@ function courtLabel(court: Court): string {
 export default function PublishPage() {
   const profile = useAuthStore((state) => state.profile)
   const loadCourts = useCourtStore((state) => state.load)
-  const dates = upcomingDates()
+  const initial = defaultSchedule()
   const [courts, setCourts] = useState<Court[]>([])
   const [courtId, setCourtId] = useState('')
   const [hint, setHint] = useState('球场信息加载中')
-  const [dateIndex, setDateIndex] = useState(Math.min(1, dates.length - 1))
-  const [slotIndex, setSlotIndex] = useState(1)
+  const [date, setDate] = useState(initial.date)
+  const [startTime, setStartTime] = useState(initial.startTime)
+  const [endTime, setEndTime] = useState(initial.endTime)
+  const scheduleRef = useRef({ date, startTime, endTime })
+  scheduleRef.current = { date, startTime, endTime }
   const [matchType, setMatchType] = useState<'singles' | 'doubles'>('doubles')
   const [slots, setSlots] = useState(3)
   const [genderPref, setGenderPref] = useState<(typeof GENDER_PREF)[number]['id']>('any')
   const [saving, setSaving] = useState(false)
 
   useDidShow(() => {
+    const current = scheduleRef.current
+    const repaired = repairIfPast(current)
+    if (
+      repaired.date !== current.date ||
+      repaired.startTime !== current.startTime ||
+      repaired.endTime !== current.endTime
+    ) {
+      setDate(repaired.date)
+      setStartTime(repaired.startTime)
+      setEndTime(repaired.endTime)
+    }
     void loadCourts(profile?.city || '武汉')
       .then((list) => {
         setCourts(list)
@@ -43,6 +67,9 @@ export default function PublishPage() {
       .catch(() => setHint('球场信息加载中'))
   })
 
+  const today = shanghaiToday()
+  const lastDate = addDays(today, DATE_WINDOW_DAYS)
+  const problem = scheduleError({ date, startTime, endTime })
   const selected = courts.find((court) => court.id === courtId) ?? null
   const labels = courts.map(courtLabel)
   const ntrp = profile?.ntrp
@@ -56,6 +83,11 @@ export default function PublishPage() {
 
   async function submit(): Promise<void> {
     if (!requireCompleteProfile()) return
+    const invalid = scheduleError({ date, startTime, endTime })
+    if (invalid) {
+      await presentError(new Error(invalid))
+      return
+    }
     if (!selected) {
       await presentError(new Error('请选择球场'))
       return
@@ -66,8 +98,9 @@ export default function PublishPage() {
         url: '/match/publish',
         method: 'POST',
         data: {
-          date: dates[dateIndex],
-          timeSlot: TIME_SLOTS[slotIndex],
+          date,
+          startTime,
+          endTime,
           courtId: selected.id,
           matchType,
           slotsNeeded: matchType === 'singles' ? 1 : slots,
@@ -119,27 +152,52 @@ export default function PublishPage() {
         </Picker>
       ) : null}
       <Picker
-        mode="selector"
-        range={dates}
-        value={dateIndex}
-        onChange={(event) => setDateIndex(Number(event.detail.value))}
+        mode="date"
+        start={today}
+        end={lastDate}
+        value={date}
+        onChange={(event) => {
+          const next = applyDate({ date, startTime, endTime }, String(event.detail.value))
+          setDate(next.date)
+          setStartTime(next.startTime)
+          setEndTime(next.endTime)
+        }}
       >
         <View className="mt-3 rounded-2xl bg-white px-4 py-3">
-          <Text className="block text-xs text-slate-500">日期</Text>
-          <Text className="mt-1 block text-sm">{dates[dateIndex]}</Text>
+          <Text className="block text-xs text-slate-500">日期（今天起 30 天）</Text>
+          <Text className="mt-1 block text-sm">{date}</Text>
         </View>
       </Picker>
       <Picker
-        mode="selector"
-        range={[...TIME_SLOTS]}
-        value={slotIndex}
-        onChange={(event) => setSlotIndex(Number(event.detail.value))}
+        mode="time"
+        value={startTime}
+        onChange={(event) => {
+          const next = applyStart({ date, startTime, endTime }, String(event.detail.value))
+          setStartTime(next.startTime)
+          setEndTime(next.endTime)
+        }}
       >
         <View className="mt-3 rounded-2xl bg-white px-4 py-3">
-          <Text className="block text-xs text-slate-500">时段</Text>
-          <Text className="mt-1 block text-sm">{TIME_SLOTS[slotIndex]}</Text>
+          <Text className="block text-xs text-slate-500">开始时间</Text>
+          <Text className="mt-1 block text-sm">{startTime}</Text>
         </View>
       </Picker>
+      <Picker
+        mode="time"
+        value={endTime}
+        onChange={(event) => setEndTime(String(event.detail.value))}
+      >
+        <View className="mt-3 rounded-2xl bg-white px-4 py-3">
+          <Text className="block text-xs text-slate-500">
+            结束时间{endTime <= startTime ? '（次日）' : ''}
+          </Text>
+          <Text className="mt-1 block text-sm">
+            {endTime}
+            {endTime <= startTime ? ' 次日' : ''} · {formatDuration(startTime, endTime)}
+          </Text>
+        </View>
+      </Picker>
+      {problem ? <Text className="mt-3 block text-sm text-amber-800">{problem}</Text> : null}
       <View className="mt-3 flex flex-row gap-2">
         {(['singles', 'doubles'] as const).map((type) => (
           <View

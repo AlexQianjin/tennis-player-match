@@ -82,11 +82,15 @@ POST /api/v1/match/publish
 date
 string
 是
-日期 YYYY-MM-DD
-timeSlot
+开始日期 YYYY-MM-DD，今天起 30 天内
+startTime
 string
 是
-时段 如 14:00-16:00
+开始时间 HH:MM（北京时间，必须晚于现在）
+endTime
+string
+是
+结束时间 HH:MM。不晚于开始时间时表示次日结束。时长 30 分钟到 8 小时
 courtId
 string
 是

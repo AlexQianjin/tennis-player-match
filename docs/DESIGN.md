@@ -1285,10 +1285,10 @@ CREATE TABLE match_request (
   publisher_id       BIGINT UNSIGNED NOT NULL,
   court_id           BIGINT UNSIGNED NOT NULL,
   city               VARCHAR(32) NOT NULL,             -- 冗余自 court.city
-  match_date         DATE NOT NULL,                    -- 北京时间日期
-  time_slot          CHAR(11) NOT NULL,                -- 'HH:MM-HH:MM'
-  start_at           DATETIME(3) NOT NULL,             -- UTC，服务端由 match_date+time_slot@Asia/Shanghai 计算
-  end_at             DATETIME(3) NOT NULL,
+  match_date         DATE NOT NULL,                    -- 北京时间的开始日期
+  time_slot          CHAR(11) NOT NULL,                -- 'HH:MM-HH:MM'；结束钟点不晚于开始时表示次日结束
+  start_at           DATETIME(3) NOT NULL,             -- UTC，由 match_date + 开始钟点 @Asia/Shanghai 计算
+  end_at             DATETIME(3) NOT NULL,             -- UTC；可落到开始日的次日。时长 30 分钟～8 小时由写入校验保证
   match_type         TINYINT UNSIGNED NOT NULL,
   slots_needed       TINYINT UNSIGNED NOT NULL,
   filled_count       TINYINT UNSIGNED NOT NULL DEFAULT 0,
@@ -1600,6 +1600,7 @@ SELECT id FROM match_request WHERE status = 2 AND start_at <= :cutoff AND is_del
 // MatchSummary
 { "id": "10001", "status": "pending", "matchType": "doubles", "slotsNeeded": 3, "filledCount": 1,
   "date": "2026-11-15", "timeSlot": "14:00-16:00", "startAt": "2026-11-15T14:00:00+08:00",
+  "endAt": "2026-11-15T16:00:00+08:00",
   "court": { /* Court */ }, "publisher": { /* UserBrief */ },
   "expectedNtrpMin": 3.0, "expectedNtrpMax": 4.0, "genderPref": "any",
   "myRole": "applicant", "myApplicationStatus": "pending",
@@ -1666,19 +1667,20 @@ SELECT id FROM match_request WHERE status = 2 AND start_at <= :cutoff AND is_del
 
 ```jsonc
 // req
-{ "date": "2026-11-15", "timeSlot": "14:00-16:00", "courtId": "3",
+{ "date": "2026-11-15", "startTime": "14:00", "endTime": "16:00", "courtId": "3",
   "matchType": "doubles",       // 兼容原字段 playerCount：1=singles，2=doubles
   "slotsNeeded": 3,             // singles 固定 1（可省略）；doubles 1~3，默认 3
   "expectedNtrpMin": 3.0, "expectedNtrpMax": 4.0, "genderPref": "any" }
-// resp.data: MatchDetail（见下）
+// resp.data: MatchDetail（见下）。timeSlot 仍为 "HH:MM-HH:MM"，并额外返回 endAt。
 ```
 
-校验：资料完整（40001）；`date ≥ 今天` 且 `start_at > now`、时段格式与先后（40002）；球场存在且属于用户城市（40003）；期望等级范围与 `[本人ntrp-0.5, 本人ntrp+0.5]` 取交集（超出部分自动收窄并在响应中体现）【假设】；已有进行中约球 → 40901（部分唯一索引兜底，捕获唯一冲突也转 40901）。成功后同事务插入发布者 `match_participant`。
+校验：资料完整（40001）；开始日期在上海时区的今天起 30 天内，且 `start_at > now`；`startTime` / `endTime` 为 `HH:MM`，结束钟点不晚于开始钟点时结束落在次日；时长 30 分钟～8 小时（40002）；球场存在且属于用户城市（40003）；期望等级范围与 `[本人ntrp-0.5, 本人ntrp+0.5]` 取交集（超出部分自动收窄并在响应中体现）【假设】；已有进行中约球 → 40901（部分唯一索引兜底，捕获唯一冲突也转 40901）。成功后同事务插入发布者 `match_participant`。响应里的 `timeSlot` 由开始和结束拼出，列表用它展示（结束钟点不晚于开始时标「次日」）。筛选、过期和 24 小时自动取消读 `start_at` / `end_at`。
 
 **GET `/match/recommend`**
 
 ```text
 query: city(必填) ntrpMin ntrpMax gender(male|female) date timeSlot courtId page pageSize
+`timeSlot` 为 `HH:MM-HH:MM`。筛选按区间重叠，而不是字符串相等：请求的 `[start_at, end_at)` 与「开始日期上的这段钟点」（结束钟点不晚于开始则顺延到次日，并再比一次次日的同一段）有交集才保留。只碰到端点不算。非法时段返回 40002。
 ```
 
 ```jsonc
@@ -2115,7 +2117,7 @@ resp = await client.chat.completions.create(
 |---|---|---|---|
 | 首页 推荐 | `pages/index/index`（Tab） | 顶部城市（MVP 仅武汉，展示）+ 筛选图标；列表上下滑动；下拉刷新、触底加载；卡片：头像、昵称、NTRP、信用分、性别、球场、日期+时段、人数进度（x/y）、推荐理由；空态「暂无符合条件的约球，试试调整筛选条件」；资料未完善时显示引导卡 | `/match/recommend` |
 | 筛选面板 | `components/FilterSheet` | 底部弹层：等级范围、性别、日期、时段、球场；确认刷新，支持重置 | — |
-| 发布 | `pages/publish/index`（Tab） | 日期（不可选过去）、预设时段（如 09:00-11:00）+ 自定义、球场 Picker（当前城市）、单打/双打、双打「还需几人」1–3、期望等级双滑块（限定本人 ±0.5）、性别偏好；提交前校验；40901 阻断提示「您已有一个进行中的约球」；成功 Toast 后 `switchTab` 首页 | `/courts`、`/match/publish` |
+| 发布 | `pages/publish/index`（Tab） | 日期（今天起 30 天）、开始时间、结束时间（默认下一整点起 2 小时；跨午夜则结束落在次日）、球场 Picker（当前城市）、单打/双打、双打「还需几人」1–3、期望等级双滑块（限定本人 ±0.5）、性别偏好；提交前校验；40901 阻断提示「您已有一个进行中的约球」；成功 Toast 后 `switchTab` 首页 | `/courts`、`/match/publish` |
 | 我的约球 | `pages/my-matches/index`（Tab） | 顶部 Tabs：待确认 / 已确认 / 已完成 / 已取消；切换刷新；列表项：对方头像昵称（双打显示参与者头像组）、时间、球场、状态；按 `availableActions` 渲染按钮；取消前调用 preview 显示「是否计入取消次数」二次确认；未到时间的「已到场」置灰并提示「未到约定时间」 | `/match/my`、`/match/cancel*`、`/match/arrive`、`/match/application/withdraw` |
 | 个人中心 | `pages/me/index`（Tab） | 头部：头像、昵称、NTRP、信用分、平均评分（次数）；点击头像区进入资料编辑；入口：我发布的 / 我申请的 / 已匹配成功的、编辑资料、设置 | `/user/profile` |
 | 约球详情 | `subpackages/match/detail/index` | 发布者信息区（头像、昵称、NTRP、信用分、平均评分、风格、简介）、约球信息区（日期、时段、球场名与地址、人数 x/y、期望条件）、参与者列表、底部按钮（申请加入 / 已申请灰 / 已匹配灰 / 查看申请列表） | `/match/detail/{id}`、`/match/apply` |
@@ -2537,7 +2539,7 @@ jobs:
 4. 已匹配后搭档退出：开赛前 → 约球回到「待匹配」、名额重开；开赛后 → 整场取消。发布方在已匹配后取消 → 整场取消。原文档单打规则为「一方取消则另一方变已取消」，本方案对单打同样「回到待匹配」，需确认。
 5. **完成规则 = 所有有效参与者都点击「已到场」**；部分到场在 24h 后自动取消，无人加分、无人计取消（替代：≥2 人到场即完成）。
 6. NTRP 硬条件只比较「浏览者 vs 发布者」，不与已加入的其他搭档比较。
-7. 「时间完全重合 + 同一球场」解释为：约球本身确定时间与球场，申请即接受；推荐筛选中的日期 / 时段 / 球场为精确匹配。不做「浏览者自己发布的约球与他人约球同时同场自动配对」（可作为 P1「为我的约球找人」视图）。
+7. 「时间完全重合 + 同一球场」解释为：约球本身确定时间与球场，申请即接受。推荐筛选里日期是开始日期的精确匹配，时段是与请求区间的重叠（半开区间，端点相接不算），球场仍是精确匹配。不做「浏览者自己发布的约球与他人约球同时同场自动配对」（可作为 P1「为我的约球找人」视图）。
 8. 发布方期望等级范围与 ±0.5 硬条件取交集；前端滑块限制在本人 ±0.5 内。
 9. 不检测同一用户在同一时段参与多个约球的时间冲突（P1 在申请 / 同意时校验）。
 10. 被拒绝 / 撤回后不可再次申请同一约球。
@@ -2548,7 +2550,7 @@ jobs:
 12. 「约定时间」= 时段开始时间 `start_at`（按 Asia/Shanghai 解释，库内存 UTC）；「已到场」可点击窗口为 `[start_at, start_at+24h)`。
 13. 24h 自动取消条件为「24h 后仍未全员到场」（原文档「无人确认」在部分到场时会让约球永远停在已匹配，故扩展）。
 14. 待匹配（含部分满员）的约球在 `start_at` 到达时自动过期取消、不计次（原文档未定义，否则会永久占用「一个进行中」名额）。
-15. 时段为预设列表 + 自定义（HH:MM-HH:MM，结束晚于开始，不跨天）；发布距开始时间无最短提前量限制。
+15. 发布时用户选择日期、开始时间和结束时间，不再限定四个 2 小时档。开始时间默认是「当前时刻之后的下一个整点」（13:06 → 14:00；恰好 14:00:00 也进到 15:00）。结束时间默认是开始 + 2 小时。开始日期范围是上海时区的今天到今天 + 30 天（含两端）。时长最短 30 分钟、最长 8 小时。结束钟点不晚于开始钟点时，结束落在次日（22:30 的默认是当天 23:00–次日 01:00，仍是 2 小时，请求有效）；若下一整点本身过了午夜（23:10 → 次日 00:00），开始日期改到明天，避免默认值已经过去。改开始时间时保持原时长，原时长不在 30 分钟～8 小时内则改回 2 小时。发布距开始时间无最短提前量，但开始必须严格晚于现在。过期和 24 小时自动取消仍只看 `start_at`，与时长无关。库表不用新迁移：`time_slot CHAR(11)` 仍放下 `HH:MM-HH:MM`，`start_at` / `end_at` 已经是任意时刻。
 
 **信用与评分**
 

@@ -5,7 +5,7 @@ import { ProfileGate } from '../../components/profile-gate.tsx'
 import { presentError } from '../../services/feedback.ts'
 import { genderLabel } from '../../services/labels.ts'
 import { openOnboarding } from '../../services/onboarding.ts'
-import { TIME_SLOTS, upcomingDates } from '../../services/schedule.ts'
+import { TIME_SLOTS, formatWhen, upcomingDates } from '../../services/schedule.ts'
 import { useAuthStore } from '../../stores/auth.ts'
 import { useCourtStore } from '../../stores/court.ts'
 import { useRecommendStore, type RecommendFilters } from '../../stores/recommend.ts'
@@ -123,7 +123,7 @@ export default function IndexPage() {
             ))}
           </View>
           <View className="mt-3 flex flex-row flex-wrap gap-2">
-            {dates.slice(0, 8).map((value) => (
+            {dates.map((value) => (
               <Text
                 key={value || 'any-date'}
                 className={chip(value ? draft.date === value : !draft.date)}
@@ -133,7 +133,8 @@ export default function IndexPage() {
               </Text>
             ))}
           </View>
-          <View className="mt-3 flex flex-row flex-wrap gap-2">
+          <Text className="mt-3 block text-xs text-slate-500">时段按重叠筛选，自定义开始和结束也会出现</Text>
+          <View className="mt-2 flex flex-row flex-wrap gap-2">
             {['', ...TIME_SLOTS].map((value) => (
               <Text
                 key={value || 'any-slot'}
@@ -209,7 +210,7 @@ export default function IndexPage() {
                 {genderLabel(item.publisher.gender)} · 信用分 {item.publisher.creditScore}
               </Text>
               <Text className="mt-2 block text-sm text-slate-700">
-                {item.court.name} · {item.date} {item.timeSlot}
+                {item.court.name} · {formatWhen(item.date, item.timeSlot)}
               </Text>
               <Text className="mt-1 block text-xs text-slate-500">
                 {item.matchType === 'doubles' ? '双打' : '单打'} · 人数 {item.filledCount + 1}/
