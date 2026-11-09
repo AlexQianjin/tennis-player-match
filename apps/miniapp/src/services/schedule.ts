@@ -1,24 +1,30 @@
 /**
  * Publish-time defaults and checks. Asia/Shanghai, no daylight saving.
  *
+ * Playable hours are 07:00–22:00 on the chosen date. A match does not cross midnight.
+ *
  * Start default: the next whole hour strictly after now. 13:06 → 14:00.
  * 14:00:00 exactly → 15:00 (an on-the-hour instant is not offered as "now").
- * End default: start + 2 hours.
+ * If that hour is before 07:00, use 07:00 on that same date.
+ * End default: min(start + 2 hours, 22:00).
+ * If the start would be later than 21:30 (not enough room for 30 minutes), roll to
+ * tomorrow 07:00–09:00. Near midnight (23:10 → next hour 00:00) the 00:00 is before
+ * 07:00, so the default is 07:00–09:00 on that next date, not a second extra day.
  *
- * If that end crosses midnight (22:30 → start 23:00, end 01:00), the end is the
- * next calendar day and the start date stays today. The request is still valid:
- * duration stays 2 hours, inside the 30-minute to 8-hour bounds. If the start
- * itself rolls past midnight (23:10 → 00:00), the start date rolls to tomorrow
- * so the default is not already in the past.
- *
- * Changing the start keeps the previous duration, clamped into the allowed
- * range (and falls back to 2 hours when the previous duration was not allowed).
+ * Changing the start keeps the previous duration, then clamps the end to 22:00.
+ * A previous duration outside 30 minutes–8 hours falls back to 2 hours.
  */
 
 export const DATE_WINDOW_DAYS = 30
 export const MIN_DURATION_MINUTES = 30
 export const MAX_DURATION_MINUTES = 8 * 60
 export const DEFAULT_DURATION_MINUTES = 120
+export const OPEN_MINUTES = 7 * 60
+export const CLOSE_MINUTES = 22 * 60
+export const LATEST_START_MINUTES = CLOSE_MINUTES - MIN_DURATION_MINUTES
+export const OPEN_TIME = '07:00'
+export const CLOSE_TIME = '22:00'
+export const LATEST_START_TIME = '21:30'
 
 /** Recommend-filter windows. A request matches when its interval overlaps the window. */
 export const TIME_SLOTS = ['09:00-11:00', '14:00-16:00', '16:00-18:00', '19:00-21:00'] as const
@@ -62,20 +68,21 @@ export function defaultSchedule(now = new Date()): ScheduleChoice {
   const wall = shanghaiWall(now)
   const cursor = new Date(Date.UTC(wall.year, wall.month - 1, wall.day, wall.hour, 0, 0))
   cursor.setUTCHours(cursor.getUTCHours() + 1)
-  const end = new Date(cursor.getTime())
-  end.setUTCMinutes(end.getUTCMinutes() + DEFAULT_DURATION_MINUTES)
-  return {
-    date: cursor.toISOString().slice(0, 10),
-    startTime: clockText(cursor.getUTCHours(), cursor.getUTCMinutes()),
-    endTime: clockText(end.getUTCHours(), end.getUTCMinutes()),
+  let date = cursor.toISOString().slice(0, 10)
+  let startMin = cursor.getUTCHours() * 60 + cursor.getUTCMinutes()
+  if (startMin < OPEN_MINUTES) startMin = OPEN_MINUTES
+  if (startMin > LATEST_START_MINUTES) {
+    date = addDays(date, 1)
+    startMin = OPEN_MINUTES
   }
+  const endMin = Math.min(startMin + DEFAULT_DURATION_MINUTES, CLOSE_MINUTES)
+  return { date, startTime: fromMinutes(startMin), endTime: fromMinutes(endMin) }
 }
 
 export function durationMinutes(startTime: string, endTime: string): number {
   const start = toMinutes(startTime)
   const end = toMinutes(endTime)
-  if (start == null || end == null || start === end) return 0
-  if (end < start) return end + DAY_MINUTES - start
+  if (start == null || end == null || end <= start) return 0
   return end - start
 }
 
@@ -84,7 +91,14 @@ export function shiftEnd(previousStart: string, previousEnd: string, nextStart: 
   if (minutes < MIN_DURATION_MINUTES || minutes > MAX_DURATION_MINUTES) {
     minutes = DEFAULT_DURATION_MINUTES
   }
-  return addClockMinutes(nextStart, minutes)
+  const start = toMinutes(nextStart) ?? OPEN_MINUTES
+  return fromMinutes(Math.min(start + minutes, CLOSE_MINUTES))
+}
+
+export function earliestEnd(startTime: string): string {
+  const start = toMinutes(startTime) ?? OPEN_MINUTES
+  const earliest = Math.max(start + MIN_DURATION_MINUTES, OPEN_MINUTES + MIN_DURATION_MINUTES)
+  return fromMinutes(Math.min(earliest, CLOSE_MINUTES))
 }
 
 export function applyStart(current: ScheduleChoice, startTime: string): ScheduleChoice {
@@ -131,8 +145,12 @@ export function scheduleError(
   const startAt = shanghaiLocalToUtc(choice.date, choice.startTime)
   if (choice.date < today || startAt.getTime() <= now.getTime()) return '不能选择过去的时间'
   if (choice.date > last) return '开始日期需在今天起 30 天内'
-  if (choice.startTime === choice.endTime) return '结束时间需要晚于开始时间'
-  const minutes = durationMinutes(choice.startTime, choice.endTime)
+  const startMin = toMinutes(choice.startTime) ?? -1
+  const endMin = toMinutes(choice.endTime) ?? -1
+  if (startMin < OPEN_MINUTES) return '开始时间不能早于 07:00'
+  if (endMin > CLOSE_MINUTES) return '结束时间不能晚于 22:00'
+  if (endMin <= startMin) return '结束时间需要晚于开始时间'
+  const minutes = endMin - startMin
   if (minutes < MIN_DURATION_MINUTES) return '时长至少 30 分钟'
   if (minutes > MAX_DURATION_MINUTES) return '时长不能超过 8 小时'
   return null
@@ -141,10 +159,7 @@ export function scheduleError(
 export function formatWhen(date: string, timeSlot: string): string {
   const matched = /^(\d{2}:\d{2})-(\d{2}:\d{2})$/.exec(timeSlot)
   if (!matched) return `${date} ${timeSlot}`.trim()
-  const start = matched[1] ?? ''
-  const end = matched[2] ?? ''
-  if (end <= start) return `${date} ${start}-次日${end}`
-  return `${date} ${start}-${end}`
+  return `${date} ${matched[1]}-${matched[2]}`
 }
 
 export function formatDuration(startTime: string, endTime: string): string {
@@ -206,10 +221,9 @@ function toMinutes(value: string): number | null {
   return Number(matched[1]) * 60 + Number(matched[2])
 }
 
-function addClockMinutes(hhmm: string, minutes: number): string {
-  const start = toMinutes(hhmm) ?? 0
-  const wrapped = (start + minutes) % DAY_MINUTES
-  return clockText(Math.floor(wrapped / 60), wrapped % 60)
+function fromMinutes(minutes: number): string {
+  const clamped = Math.max(0, Math.min(minutes, DAY_MINUTES - 1))
+  return clockText(Math.floor(clamped / 60), clamped % 60)
 }
 
 function shanghaiLocalToUtc(date: string, hhmm: string): Date {

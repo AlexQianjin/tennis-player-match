@@ -96,9 +96,7 @@ def _when(request: MatchRequest) -> str:
     day = _date_text(request)
     if not slot or "-" not in slot:
         return day or "未填写"
-    start, end = slot.split("-", 1)
-    label = f"{start}-次日{end}" if end <= start else slot
-    text = f"{day} {label}".strip()
+    text = f"{day} {slot}".strip()
     return text or "未填写"
 
 

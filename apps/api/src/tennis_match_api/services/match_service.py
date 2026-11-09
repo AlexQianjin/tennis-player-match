@@ -6,7 +6,7 @@ Cancel, leave, arrive, rate, and the scheduler stay in M3. LLM scores stay null.
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import DateTime, and_, cast, func, literal_column, or_, select, update
+from sqlalchemy import DateTime, and_, cast, func, literal_column, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -944,24 +944,20 @@ def _booking(
 
 
 def _overlaps_window(time_slot: str):
-    """Half-open overlap with the clock window on the start date and the next day.
+    """Half-open overlap with the clock window on the request's start date.
 
-    The extra day lets a 23:00–01:00 request match a 00:30–02:00 filter. Touching
-    only at an endpoint does not count. Expire and the 24h auto-cancel still key
-    off ``start_at``, so a custom start does not wait for a 2-hour grid.
+    Touching only at an endpoint does not count. The window stays on that date;
+    a filter that crosses midnight is rejected. Expire and the 24h auto-cancel
+    still key off ``start_at``.
     """
     try:
         start_min, end_min = filter_offsets(time_slot)
     except ScheduleRejected as exc:
         raise BizError(40002, exc.message) from exc
     base = cast(MatchRequest.match_date, DateTime())
-    clauses = []
-    for day in (0, 1):
-        shift = day * 24 * 60
-        window_start = func.date_add(base, literal_column(f"INTERVAL {start_min + shift} MINUTE"))
-        window_end = func.date_add(base, literal_column(f"INTERVAL {end_min + shift} MINUTE"))
-        clauses.append(and_(MatchRequest.start_at < window_end, MatchRequest.end_at > window_start))
-    return or_(*clauses)
+    window_start = func.date_add(base, literal_column(f"INTERVAL {start_min} MINUTE"))
+    window_end = func.date_add(base, literal_column(f"INTERVAL {end_min} MINUTE"))
+    return and_(MatchRequest.start_at < window_end, MatchRequest.end_at > window_start)
 
 
 async def _court_for_user(session: AsyncSession, raw_id: str, city: str) -> Court:

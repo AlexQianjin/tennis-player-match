@@ -99,9 +99,9 @@ CREATE TABLE match_request (
   court_id           BIGINT UNSIGNED NOT NULL,
   city               VARCHAR(32) NOT NULL,             -- 冗余自 court.city
   match_date         DATE NOT NULL,                    -- 北京时间的开始日期
-  time_slot          CHAR(11) NOT NULL,                -- 'HH:MM-HH:MM'；结束钟点不晚于开始时表示次日结束
+  time_slot          CHAR(11) NOT NULL,                -- 'HH:MM-HH:MM'，开始和结束在同一天
   start_at           DATETIME(3) NOT NULL,             -- UTC，由 match_date + 开始钟点 @Asia/Shanghai 计算
-  end_at             DATETIME(3) NOT NULL,             -- UTC；可落到开始日的次日。时长 30 分钟～8 小时由写入校验保证
+  end_at             DATETIME(3) NOT NULL,             -- UTC，同一上海日期。新写入限 07:00–22:00、30 分钟～8 小时；旧行仍可读
   match_type         TINYINT UNSIGNED NOT NULL,
   slots_needed       TINYINT UNSIGNED NOT NULL,
   filled_count       TINYINT UNSIGNED NOT NULL DEFAULT 0,

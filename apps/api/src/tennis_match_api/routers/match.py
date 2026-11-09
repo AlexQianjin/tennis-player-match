@@ -93,7 +93,7 @@ async def recommend(
         str | None,
         Query(
             alias="timeSlot",
-            description="HH:MM-HH:MM window. Keeps requests whose interval overlaps it.",
+            description="Same-day HH:MM-HH:MM window. Keeps requests whose interval overlaps it.",
         ),
     ] = None,
     court_id: Annotated[str | None, Query(alias="courtId")] = None,

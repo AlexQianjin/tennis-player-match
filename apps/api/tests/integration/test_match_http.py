@@ -385,7 +385,11 @@ async def test_custom_window_publish_recommend_and_apply(client, app) -> None:
     await rejected(_publish(court_id, startTime="15:20", endTime="15:40"), "30 分钟")
     await rejected(_publish(court_id, startTime="15:20", endTime="15:20"), "晚于开始")
     await rejected(_publish(court_id, startTime="10:00", endTime="19:00"), "8 小时")
-    await rejected(_publish(court_id, timeSlot="18:00-09:00"), "8 小时")
+    await rejected(_publish(court_id, timeSlot="18:00-09:00"), "晚于开始")
+    await rejected(_publish(court_id, startTime="06:30", endTime="08:30"), "07:00")
+    await rejected(_publish(court_id, startTime="20:00", endTime="22:30"), "22:00")
+    await rejected(_publish(court_id, startTime="21:00", endTime="01:00"), "晚于开始")
+    await rejected(_publish(court_id, startTime="21:40", endTime="22:00"), "30 分钟")
     await rejected(_publish(court_id, date="2026-07-02"), "30 天")
     await rejected(_publish(court_id, startTime="24:00", endTime="26:00"), "格式")
 
@@ -424,35 +428,42 @@ async def test_custom_window_publish_recommend_and_apply(client, app) -> None:
     assert applied.json()["data"]["request"]["timeSlot"] == "15:20-16:50"
     assert applied.json()["data"]["status"] == "pending"
 
-    night = await _player(client, ntrp=4.0, gender="female", nickname="夜场")
-    seeker = await _player(client, ntrp=4.0, gender="female", nickname="找夜场")
-    overnight = await client.post(
+    edge_host = await _player(client, ntrp=4.0, gender="female", nickname="收工")
+    edge_guest = await _player(client, ntrp=4.0, gender="female", nickname="来收工")
+    edge = await client.post(
         "/api/v1/match/publish",
-        headers=night,
+        headers=edge_host,
         json=_publish(
             court_id,
             date="2026-06-04",
-            startTime="23:00",
-            endTime="01:00",
+            startTime="21:30",
+            endTime="22:00",
             genderPref="female",
             matchType="singles",
             slotsNeeded=1,
         ),
     )
-    assert overnight.status_code == 200, overnight.text
-    night_id = overnight.json()["data"]["id"]
-    assert overnight.json()["data"]["timeSlot"] == "23:00-01:00"
-    assert overnight.json()["data"]["endAt"] == "2026-06-05T01:00:00+08:00"
+    assert edge.status_code == 200, edge.text
+    edge_id = edge.json()["data"]["id"]
+    assert edge.json()["data"]["timeSlot"] == "21:30-22:00"
+    assert edge.json()["data"]["endAt"] == "2026-06-04T22:00:00+08:00"
     response = await client.get(
         "/api/v1/match/recommend",
-        headers=seeker,
-        params={"city": "武汉", "courtId": court_id, "timeSlot": "00:30-02:00"},
+        headers=edge_guest,
+        params={"city": "武汉", "courtId": court_id, "timeSlot": "21:00-22:00"},
     )
     assert response.status_code == 200, response.text
-    assert night_id in [item["id"] for item in response.json()["data"]["list"]]
+    assert edge_id in [item["id"] for item in response.json()["data"]["list"]]
+    missed = await client.get(
+        "/api/v1/match/recommend",
+        headers=edge_guest,
+        params={"city": "武汉", "courtId": court_id, "timeSlot": "19:00-21:00"},
+    )
+    assert missed.status_code == 200, missed.text
+    assert edge_id not in [item["id"] for item in missed.json()["data"]["list"]]
     joined = await client.post(
         "/api/v1/match/apply",
-        headers=seeker,
-        json={"requestId": night_id},
+        headers=edge_guest,
+        json={"requestId": edge_id},
     )
     assert joined.status_code == 200, joined.text

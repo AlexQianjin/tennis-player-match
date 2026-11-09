@@ -6,11 +6,15 @@ import { presentError } from '../../services/feedback.ts'
 import { requireCompleteProfile } from '../../services/onboarding.ts'
 import { request } from '../../services/request.ts'
 import {
+  CLOSE_TIME,
   DATE_WINDOW_DAYS,
+  LATEST_START_TIME,
+  OPEN_TIME,
   addDays,
   applyDate,
   applyStart,
   defaultSchedule,
+  earliestEnd,
   formatDuration,
   repairIfPast,
   scheduleError,
@@ -170,6 +174,8 @@ export default function PublishPage() {
       </Picker>
       <Picker
         mode="time"
+        start={OPEN_TIME}
+        end={LATEST_START_TIME}
         value={startTime}
         onChange={(event) => {
           const next = applyStart({ date, startTime, endTime }, String(event.detail.value))
@@ -178,22 +184,21 @@ export default function PublishPage() {
         }}
       >
         <View className="mt-3 rounded-2xl bg-white px-4 py-3">
-          <Text className="block text-xs text-slate-500">开始时间</Text>
+          <Text className="block text-xs text-slate-500">开始时间（07:00–21:30）</Text>
           <Text className="mt-1 block text-sm">{startTime}</Text>
         </View>
       </Picker>
       <Picker
         mode="time"
+        start={earliestEnd(startTime)}
+        end={CLOSE_TIME}
         value={endTime}
         onChange={(event) => setEndTime(String(event.detail.value))}
       >
         <View className="mt-3 rounded-2xl bg-white px-4 py-3">
-          <Text className="block text-xs text-slate-500">
-            结束时间{endTime <= startTime ? '（次日）' : ''}
-          </Text>
+          <Text className="block text-xs text-slate-500">结束时间（不晚于 22:00）</Text>
           <Text className="mt-1 block text-sm">
-            {endTime}
-            {endTime <= startTime ? ' 次日' : ''} · {formatDuration(startTime, endTime)}
+            {endTime} · {formatDuration(startTime, endTime)}
           </Text>
         </View>
       </Picker>

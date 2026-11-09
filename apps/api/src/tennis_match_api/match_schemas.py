@@ -37,9 +37,11 @@ class UserBrief(CamelModel):
 
 class PublishIn(CamelModel):
     date: date
-    start_time: str = Field(description="HH:MM in Asia/Shanghai. Must be after now.")
+    start_time: str = Field(
+        description="HH:MM in Asia/Shanghai, 07:00–21:30, strictly after now, same date as endTime."
+    )
     end_time: str = Field(
-        description="HH:MM in Asia/Shanghai. A clock that is not after startTime ends the next day."
+        description="HH:MM in Asia/Shanghai, after startTime and no later than 22:00."
     )
     court_id: str
     match_type: MatchTypeName

@@ -133,7 +133,7 @@ export default function IndexPage() {
               </Text>
             ))}
           </View>
-          <Text className="mt-3 block text-xs text-slate-500">时段按重叠筛选，自定义开始和结束也会出现</Text>
+          <Text className="mt-3 block text-xs text-slate-500">时段按重叠筛选，约球在当天 07:00–22:00</Text>
           <View className="mt-2 flex flex-row flex-wrap gap-2">
             {['', ...TIME_SLOTS].map((value) => (
               <Text

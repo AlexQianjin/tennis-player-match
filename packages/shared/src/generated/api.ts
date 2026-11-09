@@ -972,12 +972,12 @@ export interface components {
             date: string;
             /**
              * Starttime
-             * @description HH:MM in Asia/Shanghai. Must be after now.
+             * @description HH:MM in Asia/Shanghai, 07:00–21:30, strictly after now, same date as endTime.
              */
             startTime: string;
             /**
              * Endtime
-             * @description HH:MM in Asia/Shanghai. A clock that is not after startTime ends the next day.
+             * @description HH:MM in Asia/Shanghai, after startTime and no later than 22:00.
              */
             endTime: string;
             /** Courtid */
@@ -1457,7 +1457,7 @@ export interface operations {
                 ntrpMax?: number | null;
                 gender?: ("male" | "female") | null;
                 date?: string | null;
-                /** @description HH:MM-HH:MM window. Keeps requests whose interval overlaps it. */
+                /** @description Same-day HH:MM-HH:MM window. Keeps requests whose interval overlaps it. */
                 timeSlot?: string | null;
                 courtId?: string | null;
                 page?: number;
