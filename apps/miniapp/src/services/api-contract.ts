@@ -126,7 +126,8 @@ const myQueries = [
 
 const publishBody = {
   date: '2026-11-02',
-  timeSlot: '14:00-16:00',
+  startTime: '14:00',
+  endTime: '16:00',
   courtId: '1',
   matchType: 'doubles',
   slotsNeeded: 2,

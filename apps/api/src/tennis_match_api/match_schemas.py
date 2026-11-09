@@ -37,7 +37,12 @@ class UserBrief(CamelModel):
 
 class PublishIn(CamelModel):
     date: date
-    time_slot: str
+    start_time: str = Field(
+        description="HH:MM in Asia/Shanghai, 07:00–21:30, strictly after now, same date as endTime."
+    )
+    end_time: str = Field(
+        description="HH:MM in Asia/Shanghai, after startTime and no later than 22:00."
+    )
     court_id: str
     match_type: MatchTypeName
     slots_needed: int | None = None
@@ -52,9 +57,9 @@ class PublishIn(CamelModel):
             return None
         return float(parse_ntrp(value))
 
-    @field_validator("time_slot")
+    @field_validator("start_time", "end_time")
     @classmethod
-    def _slot(cls, value: str) -> str:
+    def _clock(cls, value: str) -> str:
         return value.strip()
 
 
@@ -92,6 +97,7 @@ class MatchSummary(CamelModel):
     date: str
     time_slot: str
     start_at: str
+    end_at: str
     court: CourtOut
     publisher: UserBrief
     expected_ntrp_min: float | None = None
@@ -112,6 +118,7 @@ class MatchDetail(CamelModel):
     date: str
     time_slot: str
     start_at: str
+    end_at: str
     court: CourtOut
     publisher: UserPublic
     expected_ntrp_min: float | None = None

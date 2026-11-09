@@ -98,10 +98,10 @@ CREATE TABLE match_request (
   publisher_id       BIGINT UNSIGNED NOT NULL,
   court_id           BIGINT UNSIGNED NOT NULL,
   city               VARCHAR(32) NOT NULL,             -- 冗余自 court.city
-  match_date         DATE NOT NULL,                    -- 北京时间日期
-  time_slot          CHAR(11) NOT NULL,                -- 'HH:MM-HH:MM'
-  start_at           DATETIME(3) NOT NULL,             -- UTC，服务端由 match_date+time_slot@Asia/Shanghai 计算
-  end_at             DATETIME(3) NOT NULL,
+  match_date         DATE NOT NULL,                    -- 北京时间的开始日期
+  time_slot          CHAR(11) NOT NULL,                -- 'HH:MM-HH:MM'，开始和结束在同一天
+  start_at           DATETIME(3) NOT NULL,             -- UTC，由 match_date + 开始钟点 @Asia/Shanghai 计算
+  end_at             DATETIME(3) NOT NULL,             -- UTC，同一上海日期。新写入限 07:00–22:00、30 分钟～8 小时；旧行仍可读
   match_type         TINYINT UNSIGNED NOT NULL,
   slots_needed       TINYINT UNSIGNED NOT NULL,
   filled_count       TINYINT UNSIGNED NOT NULL DEFAULT 0,

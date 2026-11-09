@@ -717,6 +717,8 @@ export interface components {
             timeSlot: string;
             /** Startat */
             startAt: string;
+            /** Endat */
+            endAt: string;
             court: components["schemas"]["CourtOut"];
             publisher: components["schemas"]["UserPublic"];
             /** Expectedntrpmin */
@@ -779,6 +781,8 @@ export interface components {
             timeSlot: string;
             /** Startat */
             startAt: string;
+            /** Endat */
+            endAt: string;
             court: components["schemas"]["CourtOut"];
             publisher: components["schemas"]["UserBrief"];
             /** Expectedntrpmin */
@@ -826,6 +830,8 @@ export interface components {
             timeSlot: string;
             /** Startat */
             startAt: string;
+            /** Endat */
+            endAt: string;
             court: components["schemas"]["CourtOut"];
             publisher: components["schemas"]["UserBrief"];
             /** Expectedntrpmin */
@@ -964,8 +970,16 @@ export interface components {
              * Format: date
              */
             date: string;
-            /** Timeslot */
-            timeSlot: string;
+            /**
+             * Starttime
+             * @description HH:MM in Asia/Shanghai, 07:00–21:30, strictly after now, same date as endTime.
+             */
+            startTime: string;
+            /**
+             * Endtime
+             * @description HH:MM in Asia/Shanghai, after startTime and no later than 22:00.
+             */
+            endTime: string;
             /** Courtid */
             courtId: string;
             /**
@@ -1033,6 +1047,8 @@ export interface components {
             timeSlot: string;
             /** Startat */
             startAt: string;
+            /** Endat */
+            endAt: string;
             court: components["schemas"]["CourtOut"];
             publisher: components["schemas"]["UserBrief"];
             /** Expectedntrpmin */
@@ -1441,6 +1457,7 @@ export interface operations {
                 ntrpMax?: number | null;
                 gender?: ("male" | "female") | null;
                 date?: string | null;
+                /** @description Same-day HH:MM-HH:MM window. Keeps requests whose interval overlaps it. */
                 timeSlot?: string | null;
                 courtId?: string | null;
                 page?: number;

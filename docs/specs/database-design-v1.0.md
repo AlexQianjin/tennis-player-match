@@ -152,7 +152,7 @@ NOT NULL
 time_slot
 VARCHAR(32)
 NOT NULL
-时段 如14:00-16:00
+时段 HH:MM-HH:MM，开始和结束在同一天。新写入限制在 07:00–22:00。过期、自动取消和筛选读 start_at / end_at；窗口外的旧行仍可读
 player_count
 TINYINT
 NOT NULL
