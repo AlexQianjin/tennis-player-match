@@ -1,4 +1,5 @@
 import Taro from 'virtual:taro/api'
+import type { PlayStyle } from '@tennis/shared'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { messageFor } from '../services/errors.ts'
@@ -33,7 +34,7 @@ export interface ProfileInput {
   gender?: 'male' | 'female'
   age?: number
   city?: string
-  style?: string[]
+  style?: PlayStyle[]
   bio?: string
 }
 

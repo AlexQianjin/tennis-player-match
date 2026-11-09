@@ -1,6 +1,7 @@
 import { Image, Text, View } from 'virtual:taro/components'
 import Taro from 'virtual:taro/api'
 import { useDidShow } from 'virtual:taro/api'
+import { genderLabel, styleLabel } from '../../services/labels.ts'
 import { useAuthStore } from '../../stores/auth.ts'
 
 const FIELD_LABELS: Record<string, string> = {
@@ -11,8 +12,6 @@ const FIELD_LABELS: Record<string, string> = {
   age: '年龄',
   city: '城市',
 }
-
-const GENDER_LABELS = { male: '男', female: '女' } as const
 
 const LISTS = [
   { type: 'published', label: '我发布的' },
@@ -68,7 +67,10 @@ export default function MePage() {
             NTRP {profile?.ntrp ?? '--'} · 信用分 {profile?.creditScore ?? 0}
           </Text>
           <Text className="mt-1 block text-xs text-slate-500">
-            {profile?.gender ? GENDER_LABELS[profile.gender] : '性别未填'} · {rating}
+            确认 {profile?.confirmCount ?? 0} 次 · 取消 {profile?.cancelCount ?? 0} 次
+          </Text>
+          <Text className="mt-1 block text-xs text-slate-500">
+            {genderLabel(profile?.gender)} · {rating}
           </Text>
         </View>
       </View>
@@ -80,7 +82,9 @@ export default function MePage() {
       ) : null}
       {profile?.bio ? <Text className="mt-3 block text-sm leading-6 text-slate-600">{profile.bio}</Text> : null}
       {profile?.style?.length ? (
-        <Text className="mt-2 block text-xs text-slate-500">风格 {profile.style.join(' / ')}</Text>
+        <Text className="mt-2 block text-xs text-slate-500">
+          风格 {profile.style.map((item) => styleLabel(item)).join(' / ')}
+        </Text>
       ) : null}
       <View className="mt-6 overflow-hidden rounded-2xl bg-white">
         {LISTS.map((item) => (

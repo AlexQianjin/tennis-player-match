@@ -1,3 +1,12 @@
+def test_lifespan_starts(app) -> None:
+    from starlette.testclient import TestClient
+
+    with TestClient(app) as http:
+        response = http.get("/healthz")
+    assert response.status_code == 200
+    assert response.json()["data"] == {"status": "ok"}
+
+
 async def test_healthz(client) -> None:
     response = await client.get("/healthz")
     assert response.status_code == 200

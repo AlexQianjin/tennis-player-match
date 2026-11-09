@@ -91,4 +91,5 @@ jobs:
         env:
           UV_LOCKED: "1"
       - run: pnpm gen:api
+      - run: pnpm --filter @tennis/miniapp typecheck
       - run: git diff --exit-code packages/shared

@@ -1,6 +1,5 @@
 import Taro from 'virtual:taro/api'
-import type { ApiResponse } from '@tennis/shared'
-import { NetworkError, RETRY_DELAYS_MS, shouldRetry, unwrap } from './envelope.ts'
+import { ApiError, coerceEnvelope, NetworkError, RETRY_DELAYS_MS, shouldRetry, unwrap } from './envelope.ts'
 
 export interface RequestOptions {
   url: string
@@ -43,7 +42,7 @@ async function showWarming(): Promise<void> {
   }
 }
 
-async function dispatch<T>(options: RequestOptions, attempt: number): Promise<ApiResponse<T>> {
+async function dispatch(options: RequestOptions, attempt: number): Promise<unknown> {
   const header = {
     'X-Request-Id': requestId(),
   }
@@ -60,10 +59,10 @@ async function dispatch<T>(options: RequestOptions, attempt: number): Promise<Ap
         'X-WX-SERVICE': import.meta.env.TARO_APP_CLOUD_SERVICE,
       },
     })
-    return response.data as ApiResponse<T>
+    return response.data
   }
 
-  const response = await Taro.request<ApiResponse<T>>({
+  const response = await Taro.request({
     url: `${import.meta.env.TARO_APP_API_BASE_URL}${options.url}`,
     method: options.method ?? 'GET',
     data: options.data,
@@ -77,11 +76,12 @@ async function dispatch<T>(options: RequestOptions, attempt: number): Promise<Ap
 }
 
 export async function request<T>(options: RequestOptions, attempt = 0): Promise<T> {
-  let body: ApiResponse<T>
+  let payload: unknown
   try {
-    body = await dispatch<T>(options, attempt)
+    payload = await dispatch(options, attempt)
     warmedUp = true
   } catch (error) {
+    if (error instanceof ApiError) throw error
     if (shouldRetry(null, attempt)) {
       await showWarming()
       await sleep(RETRY_DELAYS_MS[attempt] ?? 1000)
@@ -90,6 +90,7 @@ export async function request<T>(options: RequestOptions, attempt = 0): Promise<
     throw new NetworkError(error)
   }
 
+  const body = coerceEnvelope<T>(payload)
   if (body.code === 50301 && shouldRetry(body.code, attempt)) {
     await showWarming()
     await sleep(RETRY_DELAYS_MS[attempt] ?? 1000)

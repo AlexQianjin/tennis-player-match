@@ -22,6 +22,23 @@ export class NetworkError extends Error {
   }
 }
 
+export function coerceEnvelope<T>(payload: unknown): ApiResponse<T> {
+  let body: unknown = payload
+  if (typeof body === 'string') {
+    const text = body.trim()
+    if (!text) throw new ApiError(500, '响应格式错误', payload)
+    try {
+      body = JSON.parse(text) as unknown
+    } catch {
+      throw new ApiError(500, '响应格式错误', payload)
+    }
+  }
+  if (!body || typeof body !== 'object' || !('code' in body) || typeof body.code !== 'number') {
+    throw new ApiError(500, '响应格式错误', payload)
+  }
+  return body as ApiResponse<T>
+}
+
 export function unwrap<T>(body: ApiResponse<T> | null | undefined): T {
   if (!body || typeof body.code !== 'number') {
     throw new ApiError(500, '响应格式错误', body ?? null)
