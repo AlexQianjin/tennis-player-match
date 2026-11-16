@@ -348,6 +348,62 @@ async def test_concurrent_last_arrivals_complete_once(client, app) -> None:
     assert int(count or 0) == 1
 
 
+async def test_custom_start_expires_and_auto_cancels_on_that_instant(client, app) -> None:
+    clock = _use_clock(app, datetime(2026, 8, 1, 2, 0, 0))
+    court_id = await _court()
+    host = await _player(client, ntrp=3.5, gender="male")
+    guest = await _player(client, ntrp=3.5, gender="male")
+    request_id = await _match(
+        client,
+        app,
+        host,
+        court_id,
+        matchType="singles",
+        slotsNeeded=1,
+        date="2026-08-02",
+        startTime="15:20",
+        endTime="16:50",
+    )
+    # 15:20 Shanghai is 07:20 UTC. One minute earlier must leave the request open.
+    clock.moment = datetime(2026, 8, 2, 7, 19, 0)
+    await expire_unfilled(clock)
+    detail = await client.get(f"/api/v1/match/detail/{request_id}", headers=host)
+    assert detail.json()["data"]["status"] == "pending"
+    clock.moment = datetime(2026, 8, 2, 7, 20, 0)
+    assert await expire_unfilled(clock) >= 1
+    detail = await client.get(f"/api/v1/match/detail/{request_id}", headers=host)
+    assert detail.json()["data"]["status"] == "cancelled"
+    assert detail.json()["data"]["cancelReason"] == 4
+
+    clock.moment = datetime(2026, 8, 1, 2, 0, 0)
+    request_id = await _match(
+        client,
+        app,
+        host,
+        court_id,
+        matchType="singles",
+        slotsNeeded=1,
+        date="2026-08-03",
+        startTime="15:20",
+        endTime="16:50",
+    )
+    await _agree(client, host, guest, request_id)
+    start = datetime(2026, 8, 3, 7, 20, 0)
+    clock.moment = start
+    assert (
+        await client.post("/api/v1/match/arrive", headers=host, json={"requestId": request_id})
+    ).status_code == 200
+    clock.moment = start + timedelta(hours=23, minutes=59)
+    await auto_cancel_unconfirmed(clock)
+    detail = await client.get(f"/api/v1/match/detail/{request_id}", headers=host)
+    assert detail.json()["data"]["status"] == "matched"
+    clock.moment = start + timedelta(hours=24)
+    assert await auto_cancel_unconfirmed(clock) >= 1
+    detail = await client.get(f"/api/v1/match/detail/{request_id}", headers=host)
+    assert detail.json()["data"]["status"] == "cancelled"
+    assert detail.json()["data"]["cancelReason"] == 5
+
+
 async def test_scheduler_lock_is_exclusive() -> None:
     async def hold() -> None:
         await asyncio.sleep(0.2)

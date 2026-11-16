@@ -4,6 +4,7 @@ import { presentError } from '../services/feedback.ts'
 import { matchStatusLabel } from '../services/labels.ts'
 import { confirmAndCancel, markArrived } from '../services/match-actions.ts'
 import { request } from '../services/request.ts'
+import { formatWhen } from '../services/schedule.ts'
 import type { MatchSummary } from '../stores/recommend.ts'
 
 const ACTION_LABEL: Record<string, string> = {
@@ -59,7 +60,7 @@ export function MatchCard({
           {item.publisher.nickname || '球友'} · {item.matchType === 'doubles' ? '双打' : '单打'}
         </Text>
         <Text className="mt-1 block text-sm text-slate-700">
-          {item.court.name} · {item.date} {item.timeSlot}
+          {item.court.name} · {formatWhen(item.date, item.timeSlot)}
         </Text>
         <Text className="mt-1 block text-xs text-slate-500">
           人数 {item.filledCount + 1}/{item.slotsNeeded + 1} · {matchStatusLabel(item.status)}

@@ -16,6 +16,7 @@ describe('formatCooldownMessage', () => {
 describe('messageFor', () => {
   it('maps incomplete profile and cooldown payloads', () => {
     assert.equal(messageFor(new ApiError(40001, 'raw')), '资料未完善，请先完善资料')
+    assert.equal(messageFor(new ApiError(40002, '时长至少 30 分钟')), '时长至少 30 分钟')
     const cooldown = messageFor(
       new ApiError(40301, 'raw', { nextEditableAt: '2026-02-15T10:00:00+08:00' }),
     )

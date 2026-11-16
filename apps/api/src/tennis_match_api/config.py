@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     llm_daily_limit_per_user: int = 30
     llm_json_mode: bool = True
     llm_extra_body: dict[str, object] = Field(default_factory=dict)
-    llm_prompt_version: str = "v1"
+    llm_prompt_version: str = "v2"
     llm_debug_api_enabled: bool = False
     internal_api_token: SecretStr | None = None
     ai_model_base_url: str | None = None

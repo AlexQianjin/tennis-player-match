@@ -382,6 +382,7 @@ async def auto_cancel_unconfirmed(clock: Clock, *, hours: int = 24) -> int:
 
 
 async def _scan(clock: Clock, *, status: int, action: str, reason: int, overdue: timedelta) -> int:
+    # Cutoff is the request's own start_at, not a fixed 2-hour slot boundary.
     from tennis_match_api.db import get_sessionmaker
 
     now = clock.now()

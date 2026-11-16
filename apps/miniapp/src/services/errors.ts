@@ -20,7 +20,7 @@ export function messageFor(error: unknown): string {
       return formatCooldownMessage(next)
     }
     if (error.code === 40001) return '资料未完善，请先完善资料'
-    if (error.code === 40002) return '不能选择过去的日期'
+    if (error.code === 40002) return error.message || '不能选择过去的时间'
     if (error.code === 40003) return '球场不存在或不在当前城市'
     if (error.code === 40004) return '头像文件无效'
     if (error.code === 401) return '请在微信中打开'

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { messageFor } from '../../../services/errors.ts'
 import { presentError } from '../../../services/feedback.ts'
 import { genderPrefLabel, matchStatusLabel, styleLabel } from '../../../services/labels.ts'
+import { formatWhen } from '../../../services/schedule.ts'
 import { confirmAndCancel, markArrived } from '../../../services/match-actions.ts'
 import { request } from '../../../services/request.ts'
 import type { MatchSummary } from '../../../stores/recommend.ts'
@@ -118,7 +119,7 @@ export default function DetailPanel({ requestId }: { requestId: string }) {
           {detail.court.name} {detail.court.address}
         </Text>
         <Text className="mt-1 block text-sm text-slate-700">
-          {detail.date} {detail.timeSlot} · {detail.matchType === 'doubles' ? '双打' : '单打'}
+          {formatWhen(detail.date, detail.timeSlot)} · {detail.matchType === 'doubles' ? '双打' : '单打'}
         </Text>
         <Text className="mt-1 block text-sm text-slate-700">
           人数 {detail.filledCount + 1}/{detail.slotsNeeded + 1} · {matchStatusLabel(detail.status)}

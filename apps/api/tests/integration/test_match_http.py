@@ -56,12 +56,18 @@ async def _court() -> str:
 def _publish(court_id: str, **overrides: object) -> dict[str, object]:
     body: dict[str, object] = {
         "date": "2026-06-02",
-        "timeSlot": "14:00-16:00",
+        "startTime": "14:00",
+        "endTime": "16:00",
         "courtId": court_id,
         "matchType": "doubles",
         "slotsNeeded": 3,
         "genderPref": "any",
     }
+    slot = overrides.pop("timeSlot", None)
+    if isinstance(slot, str) and slot.count("-") == 1:
+        start, end = slot.split("-", 1)
+        body["startTime"] = start
+        body["endTime"] = end
     body.update(overrides)
     return body
 
@@ -356,3 +362,108 @@ async def test_doubles_fill_and_concurrent_last_slot(client, app) -> None:
 
     codes = await asyncio.gather(agree(race_apps[0]), agree(race_apps[1]))
     assert sorted(codes) == [0, 40903]
+
+
+async def test_custom_window_publish_recommend_and_apply(client, app) -> None:
+    # 13:06 Asia/Shanghai. Defaults are a client concern; the API checks the result.
+    _use_clock(app, datetime(2026, 6, 1, 5, 6, 0))
+    publisher = await _player(client, ntrp=3.5, gender="male", nickname="自定义")
+    guest = await _player(client, ntrp=3.5, gender="male", nickname="来打")
+    court_id = await _court()
+
+    async def rejected(body: dict[str, object], fragment: str) -> None:
+        response = await client.post("/api/v1/match/publish", headers=publisher, json=body)
+        assert response.status_code == 400, response.text
+        payload = response.json()
+        assert payload["code"] == 40002
+        assert fragment in payload["message"]
+
+    await rejected(_publish(court_id, date="2026-05-01"), "过去")
+    await rejected(
+        _publish(court_id, date="2026-06-01", startTime="09:00", endTime="11:00"), "过去"
+    )
+    await rejected(_publish(court_id, startTime="15:20", endTime="15:40"), "30 分钟")
+    await rejected(_publish(court_id, startTime="15:20", endTime="15:20"), "晚于开始")
+    await rejected(_publish(court_id, startTime="10:00", endTime="19:00"), "8 小时")
+    await rejected(_publish(court_id, timeSlot="18:00-09:00"), "晚于开始")
+    await rejected(_publish(court_id, startTime="06:30", endTime="08:30"), "07:00")
+    await rejected(_publish(court_id, startTime="20:00", endTime="22:30"), "22:00")
+    await rejected(_publish(court_id, startTime="21:00", endTime="01:00"), "晚于开始")
+    await rejected(_publish(court_id, startTime="21:40", endTime="22:00"), "30 分钟")
+    await rejected(_publish(court_id, date="2026-07-02"), "30 天")
+    await rejected(_publish(court_id, startTime="24:00", endTime="26:00"), "格式")
+
+    created = await client.post(
+        "/api/v1/match/publish",
+        headers=publisher,
+        json=_publish(court_id, date="2026-06-03", startTime="15:20", endTime="16:50"),
+    )
+    assert created.status_code == 200, created.text
+    data = created.json()["data"]
+    request_id = data["id"]
+    assert data["timeSlot"] == "15:20-16:50"
+    assert data["startAt"] == "2026-06-03T15:20:00+08:00"
+    assert data["endAt"] == "2026-06-03T16:50:00+08:00"
+
+    async def listed(time_slot: str) -> list[str]:
+        response = await client.get(
+            "/api/v1/match/recommend",
+            headers=guest,
+            params={"city": "武汉", "courtId": court_id, "timeSlot": time_slot},
+        )
+        assert response.status_code == 200, response.text
+        return [item["id"] for item in response.json()["data"]["list"]]
+
+    assert request_id in await listed("15:00-16:00")
+    assert request_id in await listed("16:00-18:00")
+    assert request_id not in await listed("09:00-11:00")
+    assert request_id not in await listed("16:50-18:00")
+
+    applied = await client.post(
+        "/api/v1/match/apply",
+        headers=guest,
+        json={"requestId": request_id},
+    )
+    assert applied.status_code == 200, applied.text
+    assert applied.json()["data"]["request"]["timeSlot"] == "15:20-16:50"
+    assert applied.json()["data"]["status"] == "pending"
+
+    edge_host = await _player(client, ntrp=4.0, gender="female", nickname="收工")
+    edge_guest = await _player(client, ntrp=4.0, gender="female", nickname="来收工")
+    edge = await client.post(
+        "/api/v1/match/publish",
+        headers=edge_host,
+        json=_publish(
+            court_id,
+            date="2026-06-04",
+            startTime="21:30",
+            endTime="22:00",
+            genderPref="female",
+            matchType="singles",
+            slotsNeeded=1,
+        ),
+    )
+    assert edge.status_code == 200, edge.text
+    edge_id = edge.json()["data"]["id"]
+    assert edge.json()["data"]["timeSlot"] == "21:30-22:00"
+    assert edge.json()["data"]["endAt"] == "2026-06-04T22:00:00+08:00"
+    response = await client.get(
+        "/api/v1/match/recommend",
+        headers=edge_guest,
+        params={"city": "武汉", "courtId": court_id, "timeSlot": "21:00-22:00"},
+    )
+    assert response.status_code == 200, response.text
+    assert edge_id in [item["id"] for item in response.json()["data"]["list"]]
+    missed = await client.get(
+        "/api/v1/match/recommend",
+        headers=edge_guest,
+        params={"city": "武汉", "courtId": court_id, "timeSlot": "19:00-21:00"},
+    )
+    assert missed.status_code == 200, missed.text
+    assert edge_id not in [item["id"] for item in missed.json()["data"]["list"]]
+    joined = await client.post(
+        "/api/v1/match/apply",
+        headers=edge_guest,
+        json={"requestId": edge_id},
+    )
+    assert joined.status_code == 200, joined.text

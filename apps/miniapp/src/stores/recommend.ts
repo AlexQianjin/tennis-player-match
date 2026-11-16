@@ -29,6 +29,7 @@ export interface MatchSummary {
   date: string
   timeSlot: string
   startAt: string
+  endAt: string
   court: MatchCourt
   publisher: MatchPublisher
   expectedNtrpMin: number | null
