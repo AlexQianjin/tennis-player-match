@@ -72,6 +72,14 @@ jobs:
       - uses: actions/checkout@v7
       - run: docker build -t tennis-api:ci apps/api --build-arg UV_DEFAULT_INDEX=https://pypi.org/simple --build-arg PIP_INDEX_URL=https://pypi.org/simple
       - run: docker run --rm tennis-api:ci python -c "import tennis_match_api, asyncmy, zoneinfo; zoneinfo.ZoneInfo('Asia/Shanghai')"
+      # Installed module is in site-packages. `heads` reads revisions only; it does not connect or apply DDL.
+      - name: alembic config resolves in the image from /
+        run: |
+          docker run --rm --workdir / tennis-api:ci \
+            python -c "from pathlib import Path; from tennis_match_api.scripts.migrate import resolve_api_root; root = resolve_api_root(); assert root == Path('/app'), root"
+          output=$(docker run --rm --workdir / tennis-api:ci python -m alembic -c /app/alembic.ini heads)
+          echo "$output"
+          echo "$output" | grep -q 0001_init
 
   contract:
     runs-on: ubuntu-latest

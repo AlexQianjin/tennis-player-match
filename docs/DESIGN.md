@@ -1126,7 +1126,7 @@ CMD ["sh", "-c", "tennis-match-migrate --if-enabled && exec uvicorn tennis_match
 
 ### 4.14 运维 Runbook（`docs/runbook.md` 大纲）
 
-1. **开通（现阶段只开测试环境）**：云托管环境（上海）→ MySQL 8.0（**开启自动暂停**）（开通时确定大小写敏感，之后不可改；8.0 也不能从 5.7 原地升级）→ 控制台「参数设置」把 `character_set_server` 设为 `utf8mb4`（文档显示默认字符集为 utf8）→ root 在「数据库管理」执行 `CREATE DATABASE tennis DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci` 与 `apps/api/sql/users.sql`（替换密码）→ 对象存储设置权限规则 `{"read": true, "write": "resource.openid == auth.openid"}`（官方预设「所有用户可读、仅创建者可写」，适用于头像）。
+1. **开通（现阶段只开测试环境）**：云托管环境（上海）→ MySQL 8.0（**开启自动暂停**）（开通时确定大小写敏感，之后不可改；8.0 也不能从 5.7 原地升级）→ 控制台「参数设置」把 `character_set_server` 设为 `utf8mb4`（文档显示默认字符集为 utf8）→ root 在「数据库管理」执行 `CREATE DATABASE tennis DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`。`apps/api/sql/users.sql` 分两段（替换密码）：迁移前只执行阶段 A（建账号 + `tennis_migrator` 的 `ON tennis.*`）；等 Alembic 建表后再执行阶段 B 的表级 `GRANT`。表还不存在时阶段 B 报 `1146`。不要为了重跑授权而重建库 → 对象存储设置权限规则 `{"read": true, "write": "resource.openid == auth.openid"}`（官方预设「所有用户可读、仅创建者可写」，适用于头像）。
 2. **服务**：新建服务 `tennis-api`，按 §4.13「测试环境」一栏填写服务设置与流水线（`main` 推送触发）；**确认公网访问已关闭**；小程序后台「基础库最低版本」设为 ≥ 2.23.0。
 3. **环境变量**：按 §12.3「测试环境」JSON 在「服务设置-环境变量」填写；`MYSQL_ADDRESS` 取控制台 MySQL 页面的内网地址（手动开通的数据库不会自动注入 `MYSQL_*`）。
 4. **发布**：执行流水线 → 观察部署日志中的 `event=startup`、`alembic upgrade` 输出 → 用开发者工具调用 `/api/v1/health` 与 `/auth/login`，**先打印一次请求头确认 X-WX-* 实际到达形式**（官方提示部分框架会改写头名）。
@@ -1507,6 +1507,8 @@ GRANT SELECT                         ON tennis.alembic_version   TO 'tennis_app'
 ```
 
 说明见 §4.5。V0.2 的 `tennis` schema / RLS / `tennis_api` 角色整节作废（文件移至 `obsolete/`）。
+
+阶段 B 的表级 `GRANT` 必须等 Alembic 建表之后执行；表不存在时 MySQL 报 `1146`。阶段 A 的 `ON tennis.*` 可以在迁移前执行。执行顺序写在 `apps/api/sql/users.sql` 文件头。不要把 `tennis_app` 改成库级授权。
 
 ### 5.5 常用查询示意（SQLAlchemy Core 生成，等价 SQL 如下）
 
@@ -2624,7 +2626,7 @@ jobs:
   - 参数设置 `character_set_server=utf8mb4`；
   - **关闭自动暂停**；
   - CCU 下限 ≥ 0.25。
-- [ ] root 执行 `CREATE DATABASE tennis … utf8mb4_0900_ai_ci` 与 `apps/api/sql/users.sql`，使用**新生成的**生产密码，不复用测试环境密码。
+- [ ] root 执行 `CREATE DATABASE tennis … utf8mb4_0900_ai_ci`，再按 `apps/api/sql/users.sql` 分阶段授权：迁移前阶段 A，建表后阶段 B。使用**新生成的**生产密码，不复用测试环境密码。
 - [ ] 腾讯云控制台为 MySQL 建立每日备份计划（保留 ≥7 天），并做一次恢复演练。
 
 **对象存储与服务**

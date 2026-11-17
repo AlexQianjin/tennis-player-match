@@ -9,7 +9,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UV_DEFAULT_INDEX=${UV_DEFAULT_INDEX} \
     UV_SYSTEM_PYTHON=1 \
     UV_COMPILE_BYTECODE=1 \
-    PORT=8080
+    PORT=8080 \
+    TENNIS_API_ROOT=/app
 
 WORKDIR /app
 # Pin the same uv release used locally and in CI. Install from the configured

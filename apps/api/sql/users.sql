@@ -1,15 +1,29 @@
 -- =========================================================
--- MySQL 最小权限账号（以 root 在「数据库管理」/ SQL 窗口执行一次）
+-- MySQL 最小权限账号（以 root 在「数据库管理」/ SQL 窗口执行）
 -- 云托管 MySQL 控制台最多 3 个账号：root + tennis_migrator + tennis_app
 -- 密码由控制台/密码管理器生成，不入库、不进 Git
+--
+-- 不要在建表之前整文件执行。阶段 B 是表级 GRANT，那些表要等 Alembic
+-- （启动时的 tennis-match-migrate / alembic upgrade head）创建。
+-- 表不存在时 MySQL 报 1146 (42S02)。每条 GRANT 自动提交，失败点之前的
+-- 语句不会回滚。
+--
+-- 顺序：
+--   1. CREATE DATABASE tennis DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci
+--   2. 阶段 A（本段到「阶段 B」之前）：建账号，并给迁移账号库级权限
+--   3. 部署或执行迁移，确认业务表和 alembic_version 已存在。不要为了重跑授权而重建库
+--   4. 阶段 B：按表授予 tennis_app。不要改成 ON tennis.*，那会放大运行时权限
 -- =========================================================
+
+-- ----- 阶段 A：建库之后、迁移之前 -----
 CREATE USER IF NOT EXISTS 'tennis_migrator'@'%' IDENTIFIED BY '<MIGRATOR_PASSWORD>';
 CREATE USER IF NOT EXISTS 'tennis_app'@'%'      IDENTIFIED BY '<APP_PASSWORD>';
 
--- 迁移账号：仅 tennis 库的 DDL+DML（Alembic 使用）
+-- 迁移账号：仅 tennis 库的 DDL+DML（Alembic 使用）。ON tennis.* 不要求表已经存在。
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, INDEX, REFERENCES
   ON tennis.* TO 'tennis_migrator'@'%';
 
+-- ----- 阶段 B：迁移成功、表已经存在之后 -----
 -- 运行时账号：只有 DML，且按表授予；日志/评分表只读+追加
 GRANT SELECT, INSERT, UPDATE, DELETE ON tennis.app_user          TO 'tennis_app'@'%';
 GRANT SELECT                         ON tennis.court             TO 'tennis_app'@'%';

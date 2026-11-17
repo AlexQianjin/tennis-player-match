@@ -6,7 +6,10 @@ This is the M0 outline from `docs/DESIGN.md` §4.14. Fill in real environment ID
 
 1. Create one Cloud Hosting environment in Shanghai. Leave MySQL auto-pause on.
 2. Create MySQL 8.0. Set `character_set_server=utf8mb4` before creating `tennis` with `utf8mb4_0900_ai_ci`. Collation cannot be changed later.
-3. As root, run `apps/api/sql/users.sql` after replacing the password placeholders. That creates `tennis_migrator` and `tennis_app`.
+3. As root, create the accounts in two stages. `apps/api/sql/users.sql` grants `tennis_app` on specific tables, and those tables do not exist until Alembic runs. Running the whole file first fails with MySQL `1146 (42S02)` at `tennis.app_user`. Each `GRANT` auto-commits, so only the statements above the error are kept.
+   - Stage A, after `CREATE DATABASE` and before the first deploy: `CREATE USER` and `GRANT ... ON tennis.*` for `tennis_migrator`. A database-level grant does not need the tables.
+   - Deploy (or run migrations) and wait until `alembic upgrade head` has created the tables. Do not drop or recreate `tennis` to retry the grants.
+   - Stage B: the `tennis_app` table grants. Do not widen that account to `ON tennis.*`.
 4. Object storage rule: all users can read, only the creator can write. Avatar objects live under `avatars/`.
 
 ## 2. Service
@@ -27,6 +30,8 @@ Copy the test-environment JSON in `docs/DESIGN.md` §12.3 into the service setti
 ## 4. Release and migrate
 
 The container runs `tennis-match-migrate --if-enabled` before uvicorn. That waits for a paused database, takes `GET_LOCK('tennis:migrate', 60)`, then `alembic upgrade head`.
+
+The image installs the package into site-packages and reads Alembic config from `TENNIS_API_ROOT` (`/app` in the Dockerfile), not from the module file's parent directories. Startup logs `alembic config: /app/alembic.ini` before `upgrade head`. `script_location` in `alembic.ini` is `%(here)s/migrations`, so it still resolves when the process cwd is not `/app`.
 
 MySQL DDL commits implicitly. Take a console backup before a destructive migration. Rollback is "deploy the previous image", plus `alembic downgrade` only when that downgrade is known to be safe.
 
